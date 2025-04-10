@@ -1,6 +1,4 @@
 *{
-    margin: 0;
-    padding: 0;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
 }
@@ -31,8 +29,12 @@ body{
 }
 section{
     width: 100%;
-    height: 100vh;
+    min-height: 100vh;
 }
-section.Home{
-    background: url('/bgpattern.png');
+section.Main{
+    background: center / cover url('/bgpattern.png');
+}
+.opacity-style{
+    opacity: 1;
+    transform: none;
 }
