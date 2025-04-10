@@ -17,7 +17,7 @@ export default function LeetCodeContestQuestions() {
   };
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/questions/contest") // Make sure this URL matches your Spring Boot controller
+    fetch("http://10.10.198.249:8080/api/contests") // Make sure this URL matches your Spring Boot controller
       .then((res) => res.json())
       .then((data) => {
         setQuestions(data.questions || data); // adjust depending on response shape

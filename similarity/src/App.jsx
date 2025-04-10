@@ -1,4 +1,8 @@
 import { useState ,useEffect} from "react";
+
+//browser Routers and routes da setup
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+
 import "./App.css";
 import { ChevronDown } from "lucide-react";
 import Contest from "./Contests";
@@ -29,10 +33,22 @@ const faqs = [
       "We are working on adding personalized dashboards, API access, and real-time updates. Stay tuned!",
   },
 ];
+
 function App() {
   return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/contests" element={<Contest />} />
+      </Routes>
+    </Router>
+  )
+}
+
+function Home() {
+  return (
     <>
-    <Contest></Contest>
+    {/* <Contest></Contest> */}
     <ContestQuestions/>
     <Leaderboard/>
     <CodeView/>
@@ -62,10 +78,19 @@ function App() {
             </div>
             <div className="relative">
               <div className="absolute -inset-px bg-gradient-to-r rounded-lg opacity-30 blur-sm"></div>
-              <button className="relative bg-[#abd9ff] text-black px-4 py-2 rounded-md hover:bg-[#abd9ff] transition-color0s cursor-pointer">
+
+              <div className="relative">
+              <div className="absolute -inset-px bg-gradient-to-r rounded-lg opacity-30 blur-sm"></div>
+              <Link
+                to="/contests"
+                className="relative bg-[#abd9ff] text-black px-4 py-2 rounded-md hover:bg-[#abd9ff] transition-colors cursor-pointer"
+              >
                 Contests
-              </button>
+              </Link>
             </div>
+          </div>
+
+            {/* </div> */}
           </div>
         </nav>
         <div className="w-full h-screen flex items-center justify-center">
@@ -120,9 +145,9 @@ function App() {
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   className="lucide lucide-brain h-8 w-8 text-white"
                 >
                   <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"></path>
@@ -154,9 +179,9 @@ function App() {
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   className="lucide lucide-zap h-8 w-8 text-white"
                 >
                   <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path>
@@ -180,9 +205,9 @@ function App() {
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   className="lucide lucide-users h-8 w-8 text-white"
                 >
                   <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
@@ -234,9 +259,9 @@ function App() {
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
                 className="lucide lucide-arrow-right"
               >
                 <path d="M5 12h14"></path>
@@ -325,9 +350,9 @@ function App() {
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     className="lucide lucide-arrow-right"
                   >
                     <path d="M5 12h14"></path>
