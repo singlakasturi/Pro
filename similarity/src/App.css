@@ -1,0 +1,40 @@
+*{
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+body{
+    width: 100%;
+    height: 100vh;
+    background-color: #000;
+    color: #fff;
+}
+#root{
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+}
+#root::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+#root::-webkit-scrollbar-thumb:hover {
+    background: #444;
+}
+#root::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+}
+#root::-webkit-scrollbar-track {
+    background: #000;
+}
+section{
+    width: 100%;
+    min-height: 100vh;
+}
+section.Main{
+    background: center / cover url('/bgpattern.png');
+}
+.opacity-style{
+    opacity: 1;
+    transform: none;
+}
