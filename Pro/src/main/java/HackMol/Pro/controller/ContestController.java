@@ -39,7 +39,6 @@ public class ContestController {
         }
     }
 
-    @GetMapping("/external/ids")
     public ResponseEntity<List<String>> getExternalContestIds() {
         List<String> ids = contestService.getExternalContestIds();
         return ResponseEntity.ok(ids);

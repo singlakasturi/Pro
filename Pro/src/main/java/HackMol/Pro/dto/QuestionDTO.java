@@ -5,28 +5,29 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class QuestionDTO {
 
-    @JsonProperty("totalAccepted")
-    private Integer totalaccepted;
-
     private Integer questionId;
     private String contestId;
     private Integer questionNumber;
     private String title;
     private Difficulty difficulty;
     private Integer totalSubmissions;
+
+    private Integer totalAccepted;
     private Integer usersAccepted;
     private Integer point;
 
-    public QuestionDTO(){}
+    public QuestionDTO() {}
 
-    public QuestionDTO(Integer questionId, String contestId, Integer questionNumber, String title, Difficulty difficulty, Integer totalSubmissions, Integer totalaccepted, Integer usersAccepted, Integer point) {
+    public QuestionDTO(Integer questionId, String contestId, Integer questionNumber, String title,
+                       Difficulty difficulty, Integer totalSubmissions, Integer totalAccepted,
+                       Integer usersAccepted, Integer point) {
         this.questionId = questionId;
         this.contestId = contestId;
         this.questionNumber = questionNumber;
         this.title = title;
         this.difficulty = difficulty;
         this.totalSubmissions = totalSubmissions;
-        this.totalaccepted = totalaccepted;
+        this.totalAccepted = totalAccepted;
         this.usersAccepted = usersAccepted;
         this.point = point;
     }
@@ -63,14 +64,6 @@ public class QuestionDTO {
         this.title = title;
     }
 
-    public Integer getTotalSubmissions() {
-        return totalSubmissions;
-    }
-
-    public void setTotalSubmissions(Integer totalSubmissions) {
-        this.totalSubmissions = totalSubmissions;
-    }
-
     public Difficulty getDifficulty() {
         return difficulty;
     }
@@ -79,12 +72,20 @@ public class QuestionDTO {
         this.difficulty = difficulty;
     }
 
-    public Integer getTotalaccepted() {
-        return totalaccepted;
+    public Integer getTotalSubmissions() {
+        return totalSubmissions;
     }
 
-    public void setTotalaccepted(Integer totalaccepted) {
-        this.totalaccepted = totalaccepted;
+    public void setTotalSubmissions(Integer totalSubmissions) {
+        this.totalSubmissions = totalSubmissions;
+    }
+
+    public Integer getTotalAccepted() {
+        return totalAccepted;
+    }
+
+    public void setTotalAccepted(Integer totalAccepted) {
+        this.totalAccepted = totalAccepted;
     }
 
     public Integer getUsersAccepted() {
