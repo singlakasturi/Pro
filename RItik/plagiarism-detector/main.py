@@ -1,28 +1,49 @@
 from detectors.ast_detector import ASTDetector
 
-class PlagiarismDetector:
-    def __init__(self):
-        self.detector = ASTDetector()
+class LeetCodePlagiarismChecker(PlagiarismDetector):
+    def compare_contest_profiles(self, profile1, profile2, contest_id=None):
+        """
+        Compare two users' submissions in a contest
+        :param contest_id: If None, compares all common problems
+        :return: Dictionary of {problem_id: similarity_score}
+        """
+        results = {}
+        
+        # Get all common problems between users
+        problems1 = {sub['problem_id'] for sub in profile1.submissions}
+        problems2 = {sub['problem_id'] for sub in profile2.submissions}
+        common_problems = problems1 & problems2
+        
+        if contest_id:
+            common_problems = [p for p in common_problems if p.startswith(contest_id)]
+        
+        for problem_id in common_problems:
+            # Get all submissions for this problem from each user
+            subs1 = [s for s in profile1.submissions if s['problem_id'] == problem_id]
+            subs2 = [s for s in profile2.submissions if s['problem_id'] == problem_id]
+            
+            # Compare all submission pairs
+            max_sim = 0
+            for sub1 in subs1:
+                for sub2 in subs2:
+                    sim = self.detector.compare(sub1['code'], sub2['code'])
+                    if sim > max_sim:
+                        max_sim = sim
+            
+            results[problem_id] = max_sim
+        
+        return results
+class ProgrammerProfile:
+    def __init__(self, username):
+        self.username = username
+        self.submissions = []  # Stores (code, problem_id, timestamp) tuples
     
-    def compare_two_files(self, file1_path, file2_path):
-        """Compare two code files directly"""
-        with open(file1_path) as f1, open(file2_path) as f2:
-            code1, code2 = f1.read(), f2.read()
-        return self.detector.compare(code1, code2)
-    
-    def compare_two_snippets(self, code1, code2):
-        """Compare two code strings directly"""
-        return self.detector.compare(code1, code2)
-
-if __name__ == "__main__":
-    detector = PlagiarismDetector()
-    
-    # Example 1: Compare code strings
-    # code1 = "def add(a,b): return a+b"
-    code1 = "int mian() {return 1+2}"
-    code2 = "int main() {return 2+3}"
-    # code2 = "def sum(x,y): return x+y"
-    print(f"Similarity: {detector.compare_two_snippets(code1, code2):.1f}%")
-    
-    # Example 2: Compare files (create test1.py and test2.py first)
-    print(f"File similarity: {detector.compare_two_files('test1.py', 'test2.py'):.1f}%")
+    def add_submission(self, code, problem_id, timestamp=None):
+        """Add a LeetCode submission to the profile"""
+        from datetime import datetime
+        timestamp = timestamp or datetime.now()
+        self.submissions.append({
+            'code': code,
+            'problem_id': problem_id,
+            'timestamp': timestamp
+        })
