@@ -5,7 +5,8 @@ import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 
 import "./App.css";
 import { ChevronDown } from "lucide-react";
-import Contest from "./Contests";
+import Contests from "./Contests";
+import Contest from "./components/Contest";
 import ContestQuestions from "./ContestQuestions";
 import Leaderboard from "./LeaderBoard";
 import CodeView from "./CodeView";
@@ -39,7 +40,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/contests" element={<Contest />} />
+        <Route path="/contest" element={<Contests />} />
       </Routes>
     </Router>
   )
