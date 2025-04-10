@@ -6,10 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.Path;
 import java.util.List;
 
 @RestController
-@RequestMapping
+@RequestMapping("/contests/{contestId}")
 @CrossOrigin()
 public class QuestionController {
     private final QuestionService questionService;
@@ -19,20 +20,11 @@ public class QuestionController {
         this.questionService = questionService;
     }
 
-    @GetMapping("/contest/{contestId}")
+    @GetMapping("/questions")
     public ResponseEntity<List<QuestionDTO>> getQuestionsByContestId(@PathVariable String contestId) {
-    List<QuestionDTO> questions = questionService.getQuestionsByContestId(contestId);
-    if(questions != null && !questions.isEmpty())
-        return ResponseEntity.ok(questions);
-    else
-        return ResponseEntity.notFound().build();
-    }
-
-    @GetMapping("/{questionId}")
-    public ResponseEntity<QuestionDTO> getQuestionById(@PathVariable Integer questionId) {
-        QuestionDTO question = questionService.getQuestionById(questionId);
-        if (question != null) {
-            return ResponseEntity.ok(question);
+        List<QuestionDTO> questions = questionService.getQuestionsByContestId(contestId);
+        if (questions != null && !questions.isEmpty()) {
+            return ResponseEntity.ok(questions);
         } else {
             return ResponseEntity.notFound().build();
         }

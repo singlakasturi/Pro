@@ -5,7 +5,12 @@ import HackMol.Pro.model.Question;
 import HackMol.Pro.repository.ContestRepository;
 import HackMol.Pro.repository.QuestionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,29 +19,45 @@ import java.util.Optional;
 @Service
 public class QuestionService {
 
-    private final QuestionRepository questionRepository; // Fixed naming
+    private final QuestionRepository questionRepository;
     private final ContestRepository contestRepository;
+    private final RestTemplate restTemplate;
+
+    @Value("${external.api.questions.url}")
+    private String externalAPIurl;
+
 
     @Autowired
-    public QuestionService(QuestionRepository questionRepository, ContestRepository contestRepository) {
+    public QuestionService(QuestionRepository questionRepository, ContestRepository contestRepository, RestTemplate restTemplate) {
         this.questionRepository = questionRepository;
         this.contestRepository = contestRepository;
+        this.restTemplate = restTemplate;
     }
 
     public List<QuestionDTO> getQuestionsByContestId(String contestId) {
-        List<Question> questions = questionRepository.findByContestContestId(contestId);
-        List<QuestionDTO> questionDTOs = new ArrayList<>();
+        String url = externalAPIurl + contestId;
 
-        for (Question question : questions) {
-            questionDTOs.add(convertToDTO(question));
-        }
+        ResponseEntity<List<QuestionDTO>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                }
+        );
 
-        return questionDTOs;
+        return response.getBody();
     }
 
-    public QuestionDTO getQuestionById(Integer questionId) {
-        Optional<Question> question = questionRepository.findById(questionId);
-        return question.map(this::convertToDTO).orElse(null); // Cleaner Optional usage
+    public QuestionDTO getQuestionById(String contestId, Integer questionId) {
+        List<QuestionDTO> questions = getQuestionsByContestId(contestId);
+        if (questions == null) return null;
+
+        for (QuestionDTO question : questions) {
+            if (question.getQuestionId().equals(questionId)) {
+                return question;
+            }
+        }
+        return null;
     }
 
     private QuestionDTO convertToDTO(Question question) {
