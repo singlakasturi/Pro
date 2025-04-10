@@ -192,6 +192,7 @@ function App() {
         </div>
         <div className="flex justify-center mt-20 animate-fadeInUp animate-visible"></div>
       </section>
+
       <section id="mission" className="max-w-7xl mx-auto px-6 pt-20">
         <div className="flex justify-center mb-12">
           <div className="rounded-full bg-[#222] px-8 py-2 inline-block animate-fadeInUp animate-visible">
@@ -376,4 +377,5 @@ function FAQSection() {
     </section>
   );
 }
+
 export default App;
