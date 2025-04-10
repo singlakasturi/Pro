@@ -1,30 +1,32 @@
 package HackMol.Pro.dto;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Data
 public class SubmissionDTO {
-    private String userName;
+    private String username;
+    @JsonProperty("questionId")
     private Integer questionId;
     private String language;
     private LocalDateTime submissionDate;
 
-    public SubmissionDTO(String userName, Integer questionId, String language, LocalDateTime submissionDate) {
-        this.userName = userName;
+    public SubmissionDTO(String username, Integer questionId, String language, LocalDateTime submissionDate) {
+        this.username = username;
         this.questionId = questionId;
         this.language = language;
         this.submissionDate = submissionDate;
     }
 
-    public String getUserName() {
-        return userName;
+    public String getusername() {
+        return username;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void setusername(String username) {
+        this.username = username;
     }
 
     public Integer getQuestionId() {

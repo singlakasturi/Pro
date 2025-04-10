@@ -25,13 +25,11 @@ public class ResultsService {
     private String externalAPIurl;
 
     public List<SubmissionDTO> getSubmissionsByQuestionId(Integer questionId) {
-        String url = UriComponentsBuilder.fromHttpUrl(externalAPIurl)
-                .queryParam("questionId", questionId)
-                .toUriString();
-
+        String url = externalAPIurl + questionId;
         SubmissionDTO[] submissionsArray = restTemplate.getForObject(url, SubmissionDTO[].class);
         return Arrays.asList(submissionsArray);
     }
+
 
     public SubmissionDTO getSubmissionByUserNameAndQuestionId(Integer questionId, String userName) {
         String url = UriComponentsBuilder.fromHttpUrl(externalAPIurl)

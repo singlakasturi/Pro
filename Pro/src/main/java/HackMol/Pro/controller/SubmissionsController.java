@@ -22,13 +22,13 @@ public class SubmissionsController {
     }
 
     @GetMapping()
-    public ResponseEntity<List<SubmissionDTO>> getSubmissionsByQuestionId(@PathVariable Integer questionId) {
+    public ResponseEntity<List<SubmissionDTO>> getSubmissionsByQuestionId(@PathVariable String contestId, @PathVariable Integer questionId) {
         List<SubmissionDTO> submissions = resultsService.getSubmissionsByQuestionId(questionId);
         return ResponseEntity.ok(submissions);
     }
 
     @GetMapping("/solution/{userName}")
-    public ResponseEntity<SubmissionDTO> getSubmissionByUserNameAndQuestionId(@PathVariable Integer questionId, @PathVariable String userName) {
+    public ResponseEntity<SubmissionDTO> getSubmissionByUserNameAndQuestionId(@PathVariable String contestId, @PathVariable Integer questionId, @PathVariable String userName) {
         SubmissionDTO submission = resultsService.getSubmissionByUserNameAndQuestionId(questionId, userName);
         return ResponseEntity.ok(submission);
     }
