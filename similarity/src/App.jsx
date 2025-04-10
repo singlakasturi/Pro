@@ -1,6 +1,11 @@
 import { useState } from "react";
 import "./App.css";
 import { ChevronDown } from "lucide-react";
+import Contest from "./Contests";
+import ContestQuestions from "./ContestQuestions";
+import Leaderboard from "./LeaderBoard";
+import CodeView from "./CodeView";
+import SolutionDetails from "./SolutionDetails";
 
 const faqs = [
   {
@@ -27,6 +32,11 @@ const faqs = [
 function App() {
   return (
     <>
+    <Contest></Contest>
+    
+    <SolutionDetails></SolutionDetails>
+    <Leaderboard></Leaderboard>
+    <CodeView></CodeView>
       <section className="Main">
         <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center cursor-pointer">
           <div className="bg-black/60 rounded-lg py-2.5 px-8 max-w-4xl w-full mx-auto flex justify-between items-center shadow-lg backdrop-blur-sm">
