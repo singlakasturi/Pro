@@ -3,10 +3,7 @@ package HackMol.Pro.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -15,15 +12,32 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Data
 public class Contest {
 
     @Id
     private String contestId;
 
     private String title;
-    private LocalDateTime startTime;
+    private LocalDateTime startDate;
     private Integer participantCount;
 
     public void getStartDate() {
+    }
+
+    public String getContestId() {
+        return contestId;
+    }
+
+    public String getTitle() {
+        return this.title;
+    }
+
+    public LocalDateTime getStartTime() {
+        return this.startDate;
+    }
+
+    public Integer getParticipantCount() {
+        return participantCount;
     }
 }

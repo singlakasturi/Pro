@@ -4,10 +4,12 @@ import HackMol.Pro.controller.ContestController;
 import HackMol.Pro.model.Difficulty;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import lombok.Data;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+@Data
 public class ContestDTO {
     private String contestId;
     @Getter
@@ -18,6 +20,9 @@ public class ContestDTO {
         this.contestId = contestId;
         this.title = title;
     }
+    public ContestDTO() {
+    }
+
 
     public ContestDTO(String contestId, String title, LocalDateTime startTime, Integer participantCount) {
         this.contestId = contestId;
@@ -40,6 +45,10 @@ public class ContestDTO {
     private Integer totalAccepted;
 
     private Integer usersAccepted;
+    
+    public String getContestId(){
+        return this.contestId;
+    }
 
 
 }

@@ -29,18 +29,4 @@ public class QuestionController {
             return ResponseEntity.notFound().build();
         }
     }
-
-    @GetMapping("questions/{questionId}")
-    public QuestionDTO getQuestionById(@PathVariable String contestId, @PathVariable Integer questionId) {
-        List<QuestionDTO> questions = (List<QuestionDTO>) getQuestionsByContestId(contestId);
-
-        if (questions == null) return null;
-
-        for (QuestionDTO question : questions) {
-            if (question.getQuestionId().equals(questionId)) {
-                return question;
-            }
-        }
-        return null;
-    }
 }

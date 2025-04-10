@@ -2,31 +2,34 @@ package HackMol.Pro.services;
 
 import HackMol.Pro.dto.CodeDTO;
 import HackMol.Pro.model.Code;
-import HackMol.Pro.repository.CodeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class CodeService {
 
-    private final CodeRepository codeRepository;
+    @Value("${external.api.codes.url}")
+    private String externalCodeApiUrl;
 
-    @Autowired
-    public CodeService(CodeRepository codeRepository) {
-        this.codeRepository = codeRepository;
+    private final RestTemplate restTemplate;
+
+    public CodeService() {
+        this.restTemplate = new RestTemplate();
     }
 
     public CodeDTO getCodeBySubmissionId(String submissionId) {
-        Optional<Code> code = codeRepository.findById(submissionId);
-        return code.map(this::convertToDTO).orElse(null);
+        String url = externalCodeApiUrl + "/" + submissionId;
+
+        try {
+            Code code = restTemplate.getForObject(url, Code.class);
+            return (code != null) ? convertToDTO(code) : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private CodeDTO convertToDTO(Code code) {
-        return new CodeDTO(
-                code.getSubmissionId(),
-                code.getSubmittedCode()
-        );
+        return new CodeDTO(code.getSubmissionId(), code.getSubmittedCode());
     }
 }
