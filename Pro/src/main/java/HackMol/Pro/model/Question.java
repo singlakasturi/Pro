@@ -8,7 +8,6 @@ import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 @Entity
-@Table(name = "questions")
 @Getter
 @Setter
 @NoArgsConstructor

@@ -1,9 +1,13 @@
 package HackMol.Pro.services;
 
 import HackMol.Pro.dto.ContestDTO;
+import HackMol.Pro.dto.QuestionDTO;
 import HackMol.Pro.model.Contest;
 import HackMol.Pro.repository.ContestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.client.RestTemplate;
@@ -28,17 +32,34 @@ public class ContestService {
     }
 
     public List<ContestDTO> getAllContests() {
-        List<Contest> contests = contestRepository.findAll();
-        List<ContestDTO> contestDTOs = new ArrayList<>();
-        for (Contest contest : contests) {
-            contestDTOs.add(convertToDTO(contest));
+        try {
+            ResponseEntity<List<ContestDTO>> response = restTemplate.exchange(
+                    externalAPIurl,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<List<ContestDTO>>() {}
+            );
+
+            return response.getBody() != null ? response.getBody() : new ArrayList<>();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
         }
-        return contestDTOs;
     }
 
+
     public ContestDTO getContestById(String contestId) {
-        Optional<Contest> contest = contestRepository.findById(contestId);
-        return contest.map(this::convertToDTO).orElse(null);
+        Optional<Contest> optionalContest = contestRepository.findById(contestId);
+        if (optionalContest.isPresent()) {
+            return convertToDTO(optionalContest.get());
+        }
+
+        List<String> externalIds = getExternalContestIds();
+        if (externalIds.contains(contestId)) {
+            return new ContestDTO(contestId, "External Contest");
+        }
+
+        return null;
     }
 
     private ContestDTO convertToDTO(Contest contest) {

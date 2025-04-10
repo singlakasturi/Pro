@@ -12,7 +12,7 @@ import java.util.List;
 @CrossOrigin()
 public class ContestController {
 
-    private ContestService contestService;
+    private final ContestService contestService;
 
     public ContestController(ContestService contestService) {
         this.contestService = contestService;
@@ -26,11 +26,22 @@ public class ContestController {
 
     @GetMapping("/{contestId}")
     public ResponseEntity<ContestDTO> getContestById(@PathVariable String contestId) {
-        ContestDTO contest = contestService.getContestById(contestId);
-        if (contest != null) {
-            return ResponseEntity.ok(contest);
+        List<String> externalIds = contestService.getExternalContestIds();
+        if (externalIds.contains(contestId)) {
+            ContestDTO contest = contestService.getContestById(contestId);
+            if (contest != null) {
+                return ResponseEntity.ok(contest);
+            } else {
+                return ResponseEntity.status(204).build();
+            }
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/external/ids")
+    public ResponseEntity<List<String>> getExternalContestIds() {
+        List<String> ids = contestService.getExternalContestIds();
+        return ResponseEntity.ok(ids);
     }
 }
