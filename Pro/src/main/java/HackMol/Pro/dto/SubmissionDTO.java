@@ -1,30 +1,55 @@
 package HackMol.Pro.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
-import lombok.Getter;
-import HackMol.Pro.controller.SubmissionsController;
 
 import java.time.LocalDateTime;
 
 @Data
 public class SubmissionDTO {
     private String username;
-    private Integer rank;
+    @JsonProperty("questionId")
+    private Integer questionId;
     private String language;
+    private LocalDateTime submissionDate;
 
-    @JsonProperty("submissionTime")
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime submissionTime;
-
-    public SubmissionDTO(String username, Integer rank, String language, LocalDateTime submissionTime) {
+    public SubmissionDTO(String username, Integer questionId, String language, LocalDateTime submissionDate) {
         this.username = username;
-        this.rank = rank;
+        this.questionId = questionId;
         this.language = language;
-        this.submissionTime = submissionTime;
+        this.submissionDate = submissionDate;
     }
 
+    public String getusername() {
+        return username;
+    }
 
+    public void setusername(String username) {
+        this.username = username;
+    }
+
+    public Integer getQuestionId() {
+        return questionId;
+    }
+
+    public void setQuestionId(Integer questionId) {
+        this.questionId = questionId;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public LocalDateTime getSubmissionDate() {
+        return submissionDate;
+    }
+
+    public void setSubmissionDate(LocalDateTime submissionDate) {
+        this.submissionDate = submissionDate;
+    }
 }
