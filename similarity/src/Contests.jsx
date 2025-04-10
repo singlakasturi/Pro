@@ -1,54 +1,69 @@
-// src/pages/ContestDetails.jsx
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import QuestionCard from "./components/Contest";
+import { useEffect, useState } from 'react';
 
-const ContestDetails = () => {
-  const { contestId } = useParams();
-  const [questions, setQuestions] = useState([]);
+const LeetCodeContests = () => {
+  const [contests, setContests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [contestInfo, setContestInfo] = useState({
-    duration: "",
-    totalPoints: 0,
-  });
+  const [error, setError] = useState(null);
+
+  const fetchContests = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/contests');  // Corrected URL
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setContests(data);
+    } catch (error) {
+      console.error('There was a problem with the fetch operation:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
 
   useEffect(() => {
-    fetch(`http://10.10.198.249:8080/api/contests/${contestId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setQuestions(data.questions || []);
-        setContestInfo({
-          duration: data.duration || "90 mins",
-          totalPoints: data.totalPoints || 0,
-        });
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching contest details:", err);
-        setLoading(false);
-      });
-  }, [contestId]);
+    fetchContests();
+  }, []);
 
-  if (loading) return <div className="text-white p-4">Loading...</div>;
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
-    <div className="bg-black min-h-screen text-white px-6 py-10">
-      <div className="text-center mb-6">
-        <h1 className="text-4xl font-bold text-yellow-400 mb-2">
-          LeetCode Contest {contestId}
-        </h1>
-        <p className="text-gray-400">
-          Duration: {contestInfo.duration} | Total Points: {contestInfo.totalPoints} | Questions: {questions.length}
-        </p>
-      </div>
-
-      <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
-        {questions.map((question) => (
-          <QuestionCard key={question.questionId} question={question} />
+    <div className="max-w-3xl mx-auto p-5 font-sans bg-white rounded-lg shadow-lg">
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">LeetCode Contests</h1>
+      <p className="text-gray-600 mb-4">Search and filter contests to explore questions and rankings</p>
+      
+      <div className="space-y-4">
+        {contests.map((contest) => (
+          <div key={contest.id} className="border border-gray-200 rounded-lg p-5 hover:shadow-xl transition-shadow duration-300 ease-in-out">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold text-gray-800">
+                {contest.type === "biweekly" 
+                  ? "LeetCode Biweekly Contest" 
+                  : "LeetCode Weekly Contest"} {contest.id}
+              </h2>
+              <h3 className="text-gray-700">{contest.title}</h3>
+            </div>
+            
+            <div className="text-gray-500 text-sm mb-4 space-y-1">
+              {contest.date && <p>{contest.date}</p>}
+              {contest.participants && <p>{contest.participants} participants</p>}
+            </div>
+            
+            <button className="text-blue-600 font-medium px-4 py-2 rounded hover:bg-blue-50 transition-colors duration-200">
+              View Contest Details
+            </button>
+          </div>
         ))}
       </div>
     </div>
   );
 };
 
-export default ContestDetails;
+export default LeetCodeContests;

@@ -40,7 +40,8 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/contest" element={<Contests />} />
+        <Route path="/contests" element={<Contests />} />
+        <Route path="/contest-questions" element={<ContestQuestions />} />
       </Routes>
     </Router>
   )
