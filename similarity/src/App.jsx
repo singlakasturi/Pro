@@ -32,16 +32,12 @@ const faqs = [
 function App() {
   return (
     <>
-<<<<<<< HEAD
     <Contest></Contest>
-    
-    <SolutionDetails></SolutionDetails>
-    <Leaderboard></Leaderboard>
-    <CodeView></CodeView>
-      <section className="Main">
-=======
+    <ContestQuestions/>
+    <Leaderboard/>
+    <CodeView/>
+    <SolutionDetails/>
       <section id="main" className="Main">
->>>>>>> 70e83d5c23f50bc3542bcda9eccc6f7ad46e150b
         <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center cursor-pointer">
           <div className="bg-black/60 rounded-lg py-2.5 px-8 max-w-4xl w-full mx-auto flex justify-between items-center shadow-lg backdrop-blur-sm">
             <a
