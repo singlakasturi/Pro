@@ -27,7 +27,7 @@ const faqs = [
 function App() {
   return (
     <>
-      <section className="Main">
+      <section id="main" className="Main">
         <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center cursor-pointer">
           <div className="bg-black/60 rounded-lg py-2.5 px-8 max-w-4xl w-full mx-auto flex justify-between items-center shadow-lg backdrop-blur-sm">
             <a
@@ -84,7 +84,7 @@ function App() {
           </div>
         </div>
       </section>
-      <section className="max-w-7xl mx-auto px-6 pt-20">
+      <section id="why" className="max-w-7xl mx-auto px-6 pt-20">
         <div className="flex justify-center mb-12">
           <div className="rounded-full bg-[#222] px-8 py-2 inline-block animate-fadeInUp animate-visible">
             <span className="text-white text-lg font-normal">Why Us</span>
@@ -192,7 +192,7 @@ function App() {
         </div>
         <div className="flex justify-center mt-20 animate-fadeInUp animate-visible"></div>
       </section>
-      <section className="max-w-7xl mx-auto px-6 pt-20">
+      <section id="mission" className="max-w-7xl mx-auto px-6 pt-20">
         <div className="flex justify-center mb-12">
           <div className="rounded-full bg-[#222] px-8 py-2 inline-block animate-fadeInUp animate-visible">
             <span className="text-white text-lg font-normal">Our Mission</span>
@@ -236,8 +236,7 @@ function App() {
         </div>
       </section>
       <FAQSection />
-      <section id="contact" className="min-h-screen py-16">
-        <div className="max-w-7xl mx-auto px-6 pt-20">
+      <section id="contact" className="max-w-7xl mx-auto px-6 py-20">
           <div className="flex justify-center mb-12">
             <div className="rounded-full bg-[#1e1e1e] px-8 py-2 inline-block animate-fadeInUp animate-visible">
               <span className="text-white text-lg font-medium">
@@ -273,8 +272,6 @@ function App() {
                     className="flex h-10 w-full rounded-md border px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm bg-[#222] border-[#333] text-white"
                     id="name"
                     placeholder="Your Full Name"
-                    required=""
-                    value=""
                   ></input>
                 </div>
                 <div>
@@ -289,8 +286,6 @@ function App() {
                     className="flex h-10 w-full rounded-md border px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm bg-[#222] border-[#333] text-white"
                     id="email"
                     placeholder="Your Email"
-                    required=""
-                    value=""
                   ></input>
                 </div>
                 <div>
@@ -331,9 +326,7 @@ function App() {
               </form>
             </div>
           </div>
-        </div>
       </section>
-      ;
     </>
   );
 }
@@ -346,8 +339,7 @@ function FAQSection() {
   };
 
   return (
-    <section id="faq" className="min-h-screen py-16 bg-[#0d0d0d] text-white">
-      <div className="max-w-7xl mx-auto px-6 pt-20">
+    <section id="faq" className="max-w-7xl mx-auto px-6 pt-20">
         <div className="flex justify-center mb-12">
           <div className="rounded-full bg-[#1e1e1e] px-8 py-2 inline-block animate-fadeInUp">
             <span className="text-white text-lg font-medium">Quick Help</span>
@@ -381,7 +373,6 @@ function FAQSection() {
             </div>
           ))}
         </div>
-      </div>
     </section>
   );
 }
