@@ -19,10 +19,10 @@ if __name__ == "__main__":
     
     # Example 1: Compare code strings
     # code1 = "def add(a,b): return a+b"
-    code1 = "public class Solution { public int longestPalindrome(String s, String t) { int maxLen = 0, m = s.length(), n = t.length(); for (int i = 0; i < m; i++) for (int j = i; j < m; j++) { String sSub = s.substring(i, j + 1); for (int k = 0; k < n; k++) for (int l = k; l < n; l++) { String tSub = t.substring(k, l + 1); String combined = sSub + tSub; if (isPalindrome(combined)) maxLen = Math.max(maxLen, combined.length()); } } for (int i = 0; i < m; i++) for (int j = i; j < m; j++) { String sSub = s.substring(i, j + 1); if (isPalindrome(sSub)) maxLen = Math.max(maxLen, sSub.length()); } for (int i = 0; i < n; i++) for (int j = i; j < n; j++) { String tSub = t.substring(i, j + 1); if (isPalindrome(tSub)) maxLen = Math.max(maxLen, tSub.length()); } return maxLen == 0 ? 1 : maxLen; } private boolean isPalindrome(String str) { int left = 0, right = str.length() - 1; while (left < right) if (str.charAt(left++) != str.charAt(right--)) return false; return true; } }"
-    code2 = "public class Solution { public int longestPalindrome(String s, String t) { int maxLen = 0, m = s.length(), n = t.length(); for (int i = 0; i < m; i++) for (int j = i; j < m; j++) { String sSub = s.substring(i, j + 1); for (int k = 0; k < n; k++) for (int l = k; l < n; l++) { String tSub = t.substring(k, l + 1), combined = sSub + tSub; if (isPalindrome(combined)) maxLen = Math.max(maxLen, combined.length()); } } for (int i = 0; i < m; i++) for (int j = i; j < m; j++) { String sSub = s.substring(i, j + 1); if (isPalindrome(sSub)) maxLen = Math.max(maxLen, sSub.length()); } for (int i = 0; i < n; i++) for (int j = i; j < n; j++) { String tSub = t.substring(i, j + 1); if (isPalindrome(tSub)) maxLen = Math.max(maxLen, tSub.length()); } return maxLen == 0 ? 1 : maxLen; } private boolean isPalindrome(String str) { int left = 0, right = str.length() - 1; while (left < right) if (str.charAt(left++) != str.charAt(right--)) return false; return true; } }"
+    code1 = "int mian() {return 1+2}"
+    code2 = "int main() {return 2+3}"
     # code2 = "def sum(x,y): return x+y"
     print(f"Similarity: {detector.compare_two_snippets(code1, code2):.1f}%")
     
     # Example 2: Compare files (create test1.py and test2.py first)
-    # print(f"File similarity: {detector.compare_two_files('test1.py', 'test2.py'):.1f}%")
+    print(f"File similarity: {detector.compare_two_files('test1.py', 'test2.py'):.1f}%")
