@@ -37,8 +37,17 @@ public class ContestService {
     }
 
     public ContestDTO getContestById(String contestId) {
-        Optional<Contest> contest = contestRepository.findById(contestId);
-        return contest.map(this::convertToDTO).orElse(null);
+        Optional<Contest> optionalContest = contestRepository.findById(contestId);
+        if (optionalContest.isPresent()) {
+            return convertToDTO(optionalContest.get());
+        }
+
+        List<String> externalIds = getExternalContestIds();
+        if (externalIds.contains(contestId)) {
+            return new ContestDTO(contestId, "External Contest");
+        }
+
+        return null;
     }
 
     private ContestDTO convertToDTO(Contest contest) {

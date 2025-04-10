@@ -1,15 +1,19 @@
 package HackMol.Pro.dto;
 
 import HackMol.Pro.model.Difficulty;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class QuestionDTO {
+
+    @JsonProperty("totalAccepted")
+    private Integer totalaccepted;
+
     private Integer questionId;
     private String contestId;
     private Integer questionNumber;
     private String title;
     private Difficulty difficulty;
     private Integer totalSubmissions;
-    private Integer totalaccepted;
     private Integer usersAccepted;
     private Integer point;
 
