@@ -19,6 +19,7 @@ import java.util.Optional;
 
 @Service
 public class ContestService {
+
     private final ContestRepository contestRepository;
     private final RestTemplate restTemplate;
 
@@ -54,9 +55,11 @@ public class ContestService {
             return convertToDTO(optionalContest.get());
         }
 
-        List<String> externalIds = getExternalContestIds();
-        if (externalIds.contains(contestId)) {
-            return new ContestDTO(contestId, "External Contest");
+        List<ContestDTO> contests = getAllContests();
+        for (ContestDTO contest : contests) {
+            if (contestId.equals(contest.getContestId())) {
+                return contest;
+            }
         }
 
         return null;
@@ -72,6 +75,27 @@ public class ContestService {
     }
 
     public List<String> getExternalContestIds() {
-        return Arrays.asList(restTemplate.getForObject(externalAPIurl, String[].class));
+        try {
+            ResponseEntity<List<ContestDTO>> response = restTemplate.exchange(
+                    externalAPIurl,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<List<ContestDTO>>() {}
+            );
+
+            List<ContestDTO> contests = response.getBody();
+            List<String> ids = new ArrayList<>();
+
+            if (contests != null) {
+                for (ContestDTO contest : contests) {
+                    ids.add(contest.getContestId());
+                }
+            }
+
+            return ids;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
 }
