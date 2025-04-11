@@ -7,7 +7,7 @@ const LeetCodeContests = () => {
 
   const fetchContests = async () => {
     try {
-      const response = await fetch('http://localhost:8080/contests');  // Corrected URL
+      const response = await fetch('http://localhost:8080/contests');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

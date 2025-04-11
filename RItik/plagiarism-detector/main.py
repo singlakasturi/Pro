@@ -25,4 +25,4 @@ if __name__ == "__main__":
     print(f"Similarity: {detector.compare_two_snippets(code1, code2):.1f}%")
     
     # Example 2: Compare files (create test1.py and test2.py first)
-    # print(f"File similarity: {detector.compare_two_files('test1.py', 'test2.py'):.1f}%")
+    print(f"File similarity: {detector.compare_two_files('test1.py', 'test2.py'):.1f}%")
