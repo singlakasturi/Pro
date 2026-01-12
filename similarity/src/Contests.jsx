@@ -1,69 +1,52 @@
-import { useEffect, useState } from 'react';
+// src/Contests.jsx
+import React, { useEffect, useState } from "react";
+import Contest from "./components/Contest";
+import { parseCSV } from "./utils/parseCSV";
 
-const LeetCodeContests = () => {
+const Contests = () => {
   const [contests, setContests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchContests = async () => {
-    try {
-      const response = await fetch('http://localhost:8080/contests');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setContests(data);
-    } catch (error) {
-      console.error('There was a problem with the fetch operation:', error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-
   useEffect(() => {
+    const fetchContests = async () => {
+      try {
+        const res = await fetch("/data/contests.csv");
+        if (!res.ok) throw new Error("Failed to fetch contests CSV");
+        const text = await res.text();
+        const rows = parseCSV(text);
+        // convert participants & id
+        const data = rows.map((r) => ({
+          id: Number(r.id),
+          code: r.code,
+          title: r.title,
+          date: r.date,
+          participants: Number(r.participants || 0),
+        }));
+        setContests(data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message || "Failed to load contests");
+        setLoading(false);
+      }
+    };
     fetchContests();
   }, []);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
+  if (loading) return <div className="text-white p-6">Loading contests...</div>;
+  if (error) return <div className="text-red-500 p-6">{error}</div>;
 
   return (
-    <div className="max-w-3xl mx-auto p-5 font-sans bg-white rounded-lg shadow-lg">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">LeetCode Contests</h1>
-      <p className="text-gray-600 mb-4">Search and filter contests to explore questions and rankings</p>
-      
-      <div className="space-y-4">
+    <div className="min-h-screen bg-black px-6 py-10">
+      <h1 className="text-3xl font-bold text-white mb-8 text-center">LeetCode Contests</h1>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 place-items-center">
         {contests.map((contest) => (
-          <div key={contest.id} className="border border-gray-200 rounded-lg p-5 hover:shadow-xl transition-shadow duration-300 ease-in-out">
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-800">
-                {contest.type === "biweekly" 
-                  ? "LeetCode Biweekly Contest" 
-                  : "LeetCode Weekly Contest"} {contest.id}
-              </h2>
-              <h3 className="text-gray-700">{contest.title}</h3>
-            </div>
-            
-            <div className="text-gray-500 text-sm mb-4 space-y-1">
-              {contest.date && <p>{contest.date}</p>}
-              {contest.participants && <p>{contest.participants} participants</p>}
-            </div>
-            
-            <button className="text-blue-600 font-medium px-4 py-2 rounded hover:bg-blue-50 transition-colors duration-200">
-              View Contest Details
-            </button>
-          </div>
+          <Contest key={contest.id} code={contest.code} title={contest.title} date={contest.date} participants={contest.participants} />
         ))}
       </div>
     </div>
   );
 };
 
-export default LeetCodeContests;
+export default Contests;

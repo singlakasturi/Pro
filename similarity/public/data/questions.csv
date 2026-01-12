@@ -1,0 +1,13 @@
+contestCode,questionNumber,title,difficulty,acceptance,points
+weekly-contest-444,1,Implement Router,MEDIUM,16.3,5
+weekly-contest-444,2,Maximum Product of Subsequences With an Alternating Sum Equal to K,HARD,2.0,6
+weekly-contest-444,3,Minimum Pair Removal to Sort Array II,HARD,4.3,6
+weekly-contest-443,1,Find the XOR of Numbers Which Appear Twice,EASY,67.8,3
+weekly-contest-443,2,Maximum Subsequence Score,MEDIUM,28.1,5
+weekly-contest-443,3,Count Beautiful Subarrays,HARD,9.7,7
+weekly-contest-442,1,Minimum Operations to Make Array Equal,EASY,71.2,3
+weekly-contest-442,2,Longest Nice Subarray,MEDIUM,34.5,5
+weekly-contest-442,3,Minimum Cost to Divide Array Into Subarrays,HARD,11.4,6
+biweekly-contest-125,1,Check if Array is Good,EASY,62.4,4
+biweekly-contest-125,2,Minimum Moves to Capture The Queen,MEDIUM,22.9,5
+biweekly-contest-125,3,Maximize the Minimum Powered City,HARD,8.3,7

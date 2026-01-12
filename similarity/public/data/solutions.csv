@@ -1,0 +1,4 @@
+contestId,questionNumber,username,avatar,rank,language,time,similarSolutionsCount,codePath
+weekly-contest-444,1,bdyby76545,B,1,python3,00:12:34,6,/data/code/code_bdyby76545.txt
+weekly-contest-444,1,Taher Patanwala,T,2,python3,00:15:20,2,/data/code/code_taher.txt
+weekly-contest-444,1,Rik Mahapatra,R,8,python3,00:32:10,1,/data/code/code_rik.txt
