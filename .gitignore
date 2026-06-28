@@ -18,8 +18,9 @@
 **/venv/
 
 # Environment files
-**/.env
 .envrc
+**/.env
+**/application.properties
 
 # =========================
 # Node.js
