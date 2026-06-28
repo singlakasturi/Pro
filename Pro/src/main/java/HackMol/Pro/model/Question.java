@@ -12,11 +12,9 @@ import org.hibernate.annotations.OnDeleteAction;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@SequenceGenerator(name = "question_seq", sequenceName = "question_seq", allocationSize = 1)
 public class Question {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "question_seq")
     private Integer questionId;
 
     @ManyToOne

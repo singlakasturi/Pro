@@ -45,6 +45,31 @@
 			<version>6.0.0</version>
 		</dependency>
 		<dependency>
+			<groupId>de.jplag</groupId>
+			<artifactId>java</artifactId>
+			<version>6.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>de.jplag</groupId>
+			<artifactId>python-3</artifactId>
+			<version>6.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>de.jplag</groupId>
+			<artifactId>cpp</artifactId>
+			<version>6.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>de.jplag</groupId>
+			<artifactId>javascript</artifactId>
+			<version>6.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>de.jplag</groupId>
+			<artifactId>text</artifactId>
+			<version>6.0.0</version>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
@@ -71,7 +96,16 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+    </dependencies>
 
 	<build>
 		<plugins>
