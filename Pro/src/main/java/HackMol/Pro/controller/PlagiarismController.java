@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +21,9 @@ import java.util.Locale;
 public class PlagiarismController {
 
     private final PlagiarismService plagiarismService;
+
+    @Value("${app.base-url}")
+    private String appBaseUrl;
 
     @Autowired
     public PlagiarismController(PlagiarismService plagiarismService) {
@@ -51,8 +55,8 @@ public class PlagiarismController {
             }
 
             // Construct code path URL pointing to the GET /code/{submissionId} API
-            String codePath = String.format("http://localhost:8080/contest/%s/questions/%d/code/%s",
-                    match.getContestId(), match.getQuestionId(), otherSubId);
+            String codePath = String.format("%s/contest/%s/questions/%d/code/%s",
+                    appBaseUrl, match.getContestId(), match.getQuestionId(), otherSubId);
 
             String formattedSimilarity = String.format(Locale.US, "%.1f%%", match.getSimilarity());
             String otherLanguage = plagiarismService.getSubmissionLanguage(otherSubId);

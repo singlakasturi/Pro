@@ -72,7 +72,7 @@ function App() {
       if (!window.google) return;
 
       window.google.accounts.id.initialize({
-        client_id: "777230034210-gk1rj2ak3boo65sc2smkam7eh5gumoaq.apps.googleusercontent.com",
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         callback: (response) => {
           if (!isMounted) return;
           const token = response.credential;
