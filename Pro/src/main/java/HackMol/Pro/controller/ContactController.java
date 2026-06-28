@@ -21,12 +21,13 @@ public class ContactController {
             return ResponseEntity.ok("Email Sent Successfully");
         }
         catch(Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(500).body("Failed to send Message");
         }
     }
 
     @Data
-    class ContactRequest {
+    public static class ContactRequest {
         private String name;
         private String email;
         private String message;

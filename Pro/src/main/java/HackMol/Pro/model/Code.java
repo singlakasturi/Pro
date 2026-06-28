@@ -1,5 +1,6 @@
 package HackMol.Pro.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
@@ -10,6 +11,7 @@ public class Code {
     @Id
     private String SubmissionId;
 
+    @Column(columnDefinition = "TEXT")
     private String SubmittedCode;
 
     public Code(){}

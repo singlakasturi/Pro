@@ -8,11 +8,22 @@ import java.time.LocalDateTime;
 
 @Data
 public class SubmissionDTO {
+    private String submissionId;
     private String username;
     @JsonProperty("questionId")
     private Integer questionId;
     private String language;
     private LocalDateTime submissionDate;
+
+    public SubmissionDTO() {}
+
+    public SubmissionDTO(String submissionId, String username, Integer questionId, String language, LocalDateTime submissionDate) {
+        this.submissionId = submissionId;
+        this.username = username;
+        this.questionId = questionId;
+        this.language = language;
+        this.submissionDate = submissionDate;
+    }
 
     public SubmissionDTO(String username, Integer questionId, String language, LocalDateTime submissionDate) {
         this.username = username;
