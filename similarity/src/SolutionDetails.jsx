@@ -1,6 +1,7 @@
 // src/SolutionDetails.jsx
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { parseCSV } from "./utils/parseCSV";
 
 export default function SolutionDetails() {
@@ -14,39 +15,43 @@ export default function SolutionDetails() {
   useEffect(() => {
     const load = async () => {
       try {
-        // fetch solutions master CSV
-        const res = await fetch("/data/solutions.csv");
-        const text = await res.text();
-        const rows = parseCSV(text);
-
-        // find main solution row
-        const main = rows.find(
-          (r) =>
-            r.contestId === (params.contestCode || r.contestId) &&
-            String(r.questionNumber) === String(params.questionNumber || r.questionNumber) &&
-            (!params.username || r.username === params.username)
-        );
-
-        if (!main) {
-          // fallback: choose first that matches contestId + questionNumber
-          const fallback = rows.find((r) => r.contestId === (params.contestCode || rows[0]?.contestId));
-          if (fallback) {
-            setSolutionInfo(fallback);
-          } else {
-            setSolutionInfo(null);
+        if (params.username) {
+          let similarData = [];
+          try {
+            const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+            const simRes = await fetch(`${baseUrl}/api/v1/plagiarism/submissions/${params.submissionId}`);
+            if (simRes.ok) {
+              similarData = await simRes.json();
+            }
+          } catch (err) {
+            console.error("Failed to fetch similar solutions from API:", err);
           }
+
+          setSolutionInfo({
+            contestId: params.contestCode || params.contestId,
+            questionNumber: params.questionId || params.questionNumber,
+            username: params.username,
+            rank: params.rank,
+            language: params.language,
+            time: params.time,
+            submissionId: params.submissionId,
+            similarSolutionsCount: similarData.length,
+          });
+          setSimilar(similarData);
         } else {
+          const res = await fetch("/data/solutions.csv");
+          const text = await res.text();
+          const rows = parseCSV(text);
+          const main = rows[0];
           setSolutionInfo(main);
+
+          const res2 = await fetch("/data/similar_solutions.csv");
+          const text2 = await res2.text();
+          const simRows = parseCSV(text2).filter(
+            (r) => r.contestId === main?.contestId && String(r.questionNumber) === String(main?.questionNumber)
+          );
+          setSimilar(simRows);
         }
-
-        // load similar solutions CSV
-        const res2 = await fetch("/data/similar_solutions.csv");
-        const text2 = await res2.text();
-        const simRows = parseCSV(text2).filter(
-          (r) => r.contestId === (params.contestCode || main?.contestId) && String(r.questionNumber) === String(params.questionNumber || main?.questionNumber)
-        );
-
-        setSimilar(simRows);
       } catch (err) {
         console.error(err);
       } finally {
@@ -68,13 +73,25 @@ export default function SolutionDetails() {
   };
 
   return (
-    <div className="bg-black text-white p-6">
-      <h1 className="text-3xl font-bold text-yellow-500 mb-2">Solution Details</h1>
-      <div className="flex items-center space-x-2 text-gray-400 mb-6">
-        <span>{solutionInfo.contestId}</span>
-        <span>•</span>
-        <span>Question {solutionInfo.questionNumber}</span>
-      </div>
+    <div className="min-h-screen bg-black text-white p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <div className="relative flex items-center justify-center">
+            <button
+              onClick={() => navigate(`/leaderboard/${solutionInfo.contestId}/${solutionInfo.questionNumber}`)}
+              className="absolute left-0 flex items-center gap-2 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            >
+              <ArrowLeft size={18} />
+              <span className="hidden sm:inline">Back to Rankings</span>
+            </button>
+            <h1 className="text-5xl font-bold text-yellow-500 text-center">Solution Details</h1>
+          </div>
+          <div className="flex items-center justify-center space-x-2 text-gray-400 mt-2">
+            <span>{solutionInfo.contestId}</span>
+            <span>•</span>
+            <span>Question {solutionInfo.questionNumber}</span>
+          </div>
+        </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
@@ -113,15 +130,43 @@ export default function SolutionDetails() {
             </div>
           </div>
 
-          <div className="mt-6">
+          <div className="mt-6 flex items-center gap-4">
             <button
               onClick={() => {
-                // open CodeView with codePath
-                navigate("/code-view", { state: { codePath: solutionInfo.codePath } });
+                const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+                const path = solutionInfo.submissionId 
+                  ? `${baseUrl}/contest/${solutionInfo.contestId}/questions/${solutionInfo.questionNumber}/code/${solutionInfo.submissionId}`
+                  : solutionInfo.codePath;
+                navigate("/code-view", { state: { codePath: path } });
               }}
-              className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded flex items-center justify-center"
+              className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded flex items-center justify-center cursor-pointer font-medium"
             >
               View Code
+            </button>
+            <button
+              onClick={() => {
+                const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+                const path = solutionInfo.submissionId 
+                  ? `${baseUrl}/contest/${solutionInfo.contestId}/questions/${solutionInfo.questionNumber}/code/${solutionInfo.submissionId}`
+                  : solutionInfo.codePath;
+                navigate("/compare-code", {
+                  state: {
+                    similarList: similar,
+                    currentIndex: 0,
+                    mainUsername: solutionInfo.username,
+                    mainCodePath: path,
+                    solutionInfo: solutionInfo
+                  }
+                });
+              }}
+              disabled={similar.length === 0}
+              className={`px-6 py-3 rounded flex items-center justify-center font-medium transition-all ${
+                similar.length === 0 
+                  ? "bg-zinc-900 text-zinc-600 cursor-not-allowed opacity-50 border border-zinc-800" 
+                  : "bg-transparent border border-yellow-500 hover:bg-yellow-500/10 text-yellow-500 cursor-pointer"
+              }`}
+            >
+              Compare Code
             </button>
           </div>
         </div>
@@ -145,7 +190,7 @@ export default function SolutionDetails() {
                 {similar.length === 0 && (
                   <tr>
                     <td className="p-4 text-gray-400" colSpan="5">
-                      No similar solutions found in CSV.
+                      No Similar Solutions
                     </td>
                   </tr>
                 )}
@@ -162,7 +207,7 @@ export default function SolutionDetails() {
                     <td className="py-3 px-4">
                       <button
                         onClick={() => navigate("/code-view", { state: { codePath: s.codePath } })}
-                        className="flex items-center text-white hover:text-gray-300"
+                        className="flex items-center text-white hover:text-gray-300 cursor-pointer font-medium"
                       >
                         Code
                       </button>
@@ -175,5 +220,6 @@ export default function SolutionDetails() {
         </div>
       </div>
     </div>
+  </div>
   );
 }
