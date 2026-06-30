@@ -66,7 +66,7 @@ def process_questions(contest_slug, question_names):
                     questions.append(
                         QuestionDTO(
                             number=int(question_num),
-                            number_in_contest=2 + question_names.index(question_name) + 1,
+                            number_in_contest=question_names.index(question_name) + 1,
                             name=question_name,
                             description=soup.get_text().strip(),
                             contest_slug=contest_slug,

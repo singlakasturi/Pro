@@ -1,32 +1,48 @@
 // src/components/Contest.jsx
 import React from "react";
-import { CalendarDays, Users } from "lucide-react";
+import { CalendarDays, Users, ArrowUpRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Contest = ({ code, title, date, participants }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="bg-[#1c1c1e] text-white rounded-xl p-6 w-full max-w-md shadow-lg border border-[#2c2c2e]">
-      <div className="mb-4">
-        <span className="bg-[#5c3b1e] text-[#f5b259] text-sm font-semibold px-3 py-1 rounded">{code}</span>
+    <div 
+      onClick={() => navigate(`/contest-questions/${code}`)}
+      className="bg-zinc-900/30 hover:bg-zinc-900/50 backdrop-blur-sm text-white rounded-2xl p-6 w-full max-w-md shadow-lg hover:shadow-xl hover:shadow-[#abd9ff]/5 border border-zinc-800/80 hover:border-[#abd9ff]/30 hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col justify-between h-full"
+    >
+      <div>
+        <div className="flex justify-between items-center mb-5">
+          <span className="bg-[#abd9ff]/10 text-[#abd9ff] border border-[#abd9ff]/20 text-xs font-semibold px-3 py-1 rounded-lg tracking-wider">
+            {code}
+          </span>
+          <ArrowUpRight size={18} className="text-zinc-500 group-hover:text-[#abd9ff] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-300" />
+        </div>
+
+        <h2 className="text-xl font-bold mb-3 text-zinc-100 group-hover:text-white transition-colors">
+          {title}
+        </h2>
+
+        <div className="flex items-center text-zinc-400 text-xs space-x-4 mb-6">
+          <div className="flex items-center space-x-1.5">
+            <CalendarDays size={14} className="text-[#abd9ff]/70" />
+            <span>{date}</span>
+          </div>
+          <div className="flex items-center space-x-1.5">
+            <Users size={14} className="text-[#abd9ff]/70" />
+            <span>{participants.toLocaleString()} participants</span>
+          </div>
+        </div>
       </div>
 
-      <h2 className="text-2xl font-bold mb-2">{title}</h2>
-
-      <div className="flex items-center text-gray-400 text-sm space-x-4 mb-6">
-        <div className="flex items-center space-x-1">
-          <CalendarDays size={16} />
-          <span>{date}</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <Users size={16} />
-          <span>{participants.toLocaleString()} participants</span>
-        </div>
-      </div>
-
-      <button onClick={() => navigate(`/contest-questions/${code}`)} className="bg-[#4d3823] hover:bg-[#6c4e30] transition text-white font-medium py-2 px-4 rounded">
-        View Contest Details
+      <button 
+        onClick={(e) => {
+          e.stopPropagation();
+          navigate(`/contest-questions/${code}`);
+        }}
+        className="w-full border border-[#abd9ff]/25 text-[#abd9ff] font-medium py-2.5 px-4 rounded-xl text-sm transition-all duration-300 hover:bg-[#abd9ff] hover:text-black hover:border-[#abd9ff] cursor-pointer shadow-sm text-center"
+      >
+        View Questions
       </button>
     </div>
   );

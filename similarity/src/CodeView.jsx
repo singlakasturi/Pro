@@ -41,20 +41,24 @@ export default function CodeView() {
   if (loading) return <div className="text-white bg-black min-h-screen p-6">Loading code...</div>;
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6 flex items-center gap-4">
+    <div className="min-h-screen bg-zinc-950 text-white px-6 py-12 relative overflow-hidden animate-fade-in">
+      {/* Background glow */}
+      <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#abd9ff]/5 rounded-full blur-3xl pointer-events-none animate-pulse-glow"></div>
+
+      <div className="max-w-4xl mx-auto relative z-10 animate-scale-in">
+        <div className="mb-8 flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors cursor-pointer font-medium"
+            className="flex items-center gap-2 text-zinc-400 hover:text-[#abd9ff] transition-all cursor-pointer font-medium text-sm"
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft size={16} />
             <span>Back</span>
           </button>
-          <div className="h-6 w-px bg-zinc-800"></div>
-          <h1 className="text-3xl font-bold text-yellow-500">Submitted Code</h1>
+          <div className="h-4 w-px bg-zinc-800"></div>
+          <h1 className="text-3xl font-extrabold text-white">Submitted <span className="text-[#abd9ff]">Code</span></h1>
         </div>
-        <pre className="bg-zinc-950 text-green-300 p-6 rounded-xl overflow-auto no-scrollbar border border-zinc-800 font-mono text-sm leading-relaxed max-h-[80vh]">
+        
+        <pre className="bg-zinc-900/35 text-zinc-100 p-6 rounded-2xl overflow-auto no-scrollbar border border-zinc-900 font-mono text-sm leading-relaxed max-h-[75vh] shadow-xl">
           <code>{codeText}</code>
         </pre>
       </div>

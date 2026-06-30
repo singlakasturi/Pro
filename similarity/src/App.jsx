@@ -152,11 +152,23 @@ function App() {
 }
 
 function Home({ user, onSignOut }) {
-  const [contactName, setContactName] = useState("");
-  const [contactEmail, setContactEmail] = useState("");
-  const [contactMessage, setContactMessage] = useState("");
+  const [contactName, setContactName] = useState(() => localStorage.getItem("contactName") || "");
+  const [contactEmail, setContactEmail] = useState(() => localStorage.getItem("contactEmail") || "");
+  const [contactMessage, setContactMessage] = useState(() => localStorage.getItem("contactMessage") || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem("contactName", contactName);
+  }, [contactName]);
+
+  useEffect(() => {
+    localStorage.setItem("contactEmail", contactEmail);
+  }, [contactEmail]);
+
+  useEffect(() => {
+    localStorage.setItem("contactMessage", contactMessage);
+  }, [contactMessage]);
 
   const scrollToSection = (id) => {
     const element = document.getElementById(id);

@@ -439,15 +439,30 @@ def get_all_submissions(contest_slug: str, lookup_questions: List[QuestionDTO], 
     return (contest, submissions)
 
 
+def save_async(contest, questions, submissions):
+    try:
+        save_api(contest, questions, submissions)
+    except Exception as e:
+        logger.error(f"Failed to save contest data asynchronously: {e}")
+
+global_save_threads = []
+
 def process_contest(contest_slug: str) -> List[str]:
     logger.info(f"Processing contest {contest_slug}")
     questions, mapping = get_questions(contest_slug)
-    questions = questions[2:]
     contest, submissions = get_all_submissions(contest_slug, questions, mapping)
-    logger.info(f"Saving {len(submissions)} submissions")
     if API_CLIENT:
-        save_api(contest, questions, submissions)
+        logger.info(f"Saving {len(submissions)} submissions asynchronously for {contest_slug}")
+        import threading
+        thread = threading.Thread(
+            target=save_async,
+            args=(contest, questions, submissions),
+            daemon=False
+        )
+        thread.start()
+        global_save_threads.append(thread)
     else:
+        logger.info(f"Saving {len(submissions)} submissions locally")
         save_local(submissions)
     return [question.name for question in questions]
 
@@ -496,6 +511,12 @@ def handler(event, context):
             logger.error(f"Invalid contest range format: {contest_slug}")
     else:
         process_contest(contest_slug)
+
+    if global_save_threads:
+        logger.info(f"Waiting for {len(global_save_threads)} background saving threads to finish...")
+        for thread in global_save_threads:
+            thread.join()
+        logger.info("All background saving threads finished.")
 
     if os.environ.get("TASK_TOKEN"):
         result = {
