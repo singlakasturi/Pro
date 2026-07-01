@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 
 import "./App.css";
 import { ChevronDown } from "lucide-react";
@@ -147,6 +148,7 @@ function App() {
         <Route path="/compare-code" element={<CompareCode user={user} onSignOut={handleSignOut} />} />
         <Route path="/admin/populator" element={<DatabasePopulator user={user} onSignOut={handleSignOut} />} />
       </Routes>
+      <Analytics />
     </Router>
   );
 }
