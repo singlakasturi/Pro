@@ -42,17 +42,24 @@ HEADERS = {
 MAX_RETRIES = 20
 REQUEST_TIMEOUT_SEC = 15
 OXYLABS_CREDENTIALS = os.getenv("OXYLABS_CREDENTIALS")
+SCRAPEDO_TOKEN = os.getenv("SCRAPEDO_TOKEN")
 
 
 def get(url: str, headers_override=None) -> str:
     delay = 1
+    headers = HEADERS.copy()
+    if SCRAPEDO_TOKEN:
+        import base64
+        auth = base64.b64encode(f"{SCRAPEDO_TOKEN}:".encode()).decode()
+        headers["Proxy-Authorization"] = f"Basic {auth}"
+        
     for i in range(MAX_RETRIES):
         try:
-            if not OXYLABS_CREDENTIALS:
-                request = urllib.request.Request(url, headers=HEADERS)
+            if not OXYLABS_CREDENTIALS and not SCRAPEDO_TOKEN:
+                request = urllib.request.Request(url, headers=headers)
                 response = urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT_SEC)
                 return response.read().decode()
-            else:
+            elif OXYLABS_CREDENTIALS:
                 proxy_url = f"http://customer-{OXYLABS_CREDENTIALS}@pr.oxylabs.io:7777"
                 proxy = urllib.request.ProxyHandler(
                     {
@@ -61,7 +68,24 @@ def get(url: str, headers_override=None) -> str:
                     }
                 )
                 opener = urllib.request.build_opener(proxy)
-                request = urllib.request.Request(url, headers=HEADERS)
+                request = urllib.request.Request(url, headers=headers)
+                response = opener.open(request, timeout=REQUEST_TIMEOUT_SEC)
+                return response.read().decode()
+            else:
+                import ssl
+                proxy_url = f"http://{SCRAPEDO_TOKEN}:@proxy.scrape.do:8080"
+                proxy = urllib.request.ProxyHandler(
+                    {
+                        "http": proxy_url,
+                        "https": proxy_url,
+                    }
+                )
+                ctx = ssl.create_default_context()
+                ctx.check_hostname = False
+                ctx.verify_mode = ssl.CERT_NONE
+                https_handler = urllib.request.HTTPSHandler(context=ctx)
+                opener = urllib.request.build_opener(proxy, https_handler)
+                request = urllib.request.Request(url, headers=headers)
                 response = opener.open(request, timeout=REQUEST_TIMEOUT_SEC)
                 return response.read().decode()
         except Exception as _:

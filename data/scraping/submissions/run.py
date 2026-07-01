@@ -104,6 +104,7 @@ MAX_RETRIES = 50
 REQUEST_TIMEOUT_SEC = 15
 
 OXYLABS_CREDENTIALS = os.getenv("OXYLABS_CREDENTIALS")
+SCRAPEDO_TOKEN = os.getenv("SCRAPEDO_TOKEN")
 USER_AGENT_ROTATOR = UserAgent(
     software_names=[SoftwareName.CHROME.value, SoftwareName.FIREFOX.value],
     operating_systems=[OperatingSystem.WINDOWS.value, OperatingSystem.MACOS.value],
@@ -131,27 +132,29 @@ _playwright_page = None
 _playwright_context = None
 _playwright_browser = None
 _playwright_started = None
+_playwright_storage_path = None
 
 
 def init_playwright():
-    global _playwright_page, _playwright_context, _playwright_browser, _playwright_started
+    global _playwright_page, _playwright_context, _playwright_browser, _playwright_started, _playwright_storage_path
     if _playwright_page is not None:
         return
     
     from playwright.sync_api import sync_playwright
     _playwright_started = sync_playwright().start()
     
-    storage_path = os.getenv("LEETCODE_STORAGE_STATE") or "storage/leetcode-state.json"
-    if not os.path.exists(storage_path) and os.path.exists("../scraper-worker/storage/leetcode-state.json"):
-        storage_path = "../scraper-worker/storage/leetcode-state.json"
+    _playwright_storage_path = os.getenv("LEETCODE_STORAGE_STATE") or "storage/leetcode-state.json"
+    if not os.path.exists(_playwright_storage_path) and os.path.exists("../scraper-worker/storage/leetcode-state.json"):
+        _playwright_storage_path = "../scraper-worker/storage/leetcode-state.json"
         
-    launch_options = {"headless": False}
+    headless = os.getenv("HEADLESS", "true").lower() == "true"
+    launch_options = {"headless": headless}
     user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
     context_options = {
         "user_agent": user_agent
     }
-    if os.path.exists(storage_path):
-        context_options["storage_state"] = storage_path
+    if os.path.exists(_playwright_storage_path):
+        context_options["storage_state"] = _playwright_storage_path
         
     _playwright_browser = _playwright_started.chromium.launch(**launch_options)
     _playwright_context = _playwright_browser.new_context(**context_options)
@@ -159,7 +162,15 @@ def init_playwright():
 
 
 def close_playwright():
-    global _playwright_page, _playwright_context, _playwright_browser, _playwright_started
+    global _playwright_page, _playwright_context, _playwright_browser, _playwright_started, _playwright_storage_path
+    try:
+        if _playwright_context and _playwright_storage_path:
+            os.makedirs(os.path.dirname(_playwright_storage_path), exist_ok=True)
+            _playwright_context.storage_state(path=_playwright_storage_path)
+            logger.info(f"Saved updated LeetCode session storage state to {_playwright_storage_path}")
+    except Exception as e:
+        logger.error(f"Failed to save LeetCode storage state: {e}")
+
     try:
         if _playwright_browser:
             _playwright_browser.close()
@@ -191,7 +202,9 @@ def get(url: str, headers_override=None) -> dict:
     global _playwright_failed
     headers_override = headers_override or {}
     
-    if not _playwright_failed:
+    is_main = (threading.current_thread() == threading.main_thread())
+    use_playwright = is_main and not _playwright_failed and not OXYLABS_CREDENTIALS and not SCRAPEDO_TOKEN
+    if use_playwright:
         try:
             with _playwright_lock:
                 init_playwright()
@@ -224,15 +237,19 @@ def get(url: str, headers_override=None) -> dict:
     headers = HEADERS.copy()
     for k in headers_override:
         headers[k] = headers_override[k]
+    if SCRAPEDO_TOKEN:
+        import base64
+        auth = base64.b64encode(f"{SCRAPEDO_TOKEN}:".encode()).decode()
+        headers["Proxy-Authorization"] = f"Basic {auth}"
     delay = 1
     for i in range(MAX_RETRIES):
         try:
             headers["user-agent"] = USER_AGENT_ROTATOR.get_random_user_agent()
-            if not OXYLABS_CREDENTIALS:
+            if not OXYLABS_CREDENTIALS and not SCRAPEDO_TOKEN:
                 request = urllib.request.Request(url, headers=headers)
                 response = urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT_SEC)
                 return json.loads(response.read().decode())
-            else:
+            elif OXYLABS_CREDENTIALS:
                 proxy_url = f"http://customer-{OXYLABS_CREDENTIALS}@pr.oxylabs.io:7777"
                 proxy = urllib.request.ProxyHandler(
                     {
@@ -241,6 +258,22 @@ def get(url: str, headers_override=None) -> dict:
                     }
                 )
                 opener = urllib.request.build_opener(proxy)
+                request = urllib.request.Request(url, headers=headers)
+                response = opener.open(request, timeout=REQUEST_TIMEOUT_SEC)
+                return json.loads(response.read().decode())
+            else:
+                proxy_url = f"http://{SCRAPEDO_TOKEN}:@proxy.scrape.do:8080"
+                proxy = urllib.request.ProxyHandler(
+                    {
+                        "http": proxy_url,
+                        "https": proxy_url,
+                    }
+                )
+                ctx = ssl.create_default_context()
+                ctx.check_hostname = False
+                ctx.verify_mode = ssl.CERT_NONE
+                https_handler = urllib.request.HTTPSHandler(context=ctx)
+                opener = urllib.request.build_opener(proxy, https_handler)
                 request = urllib.request.Request(url, headers=headers)
                 response = opener.open(request, timeout=REQUEST_TIMEOUT_SEC)
                 return json.loads(response.read().decode())
@@ -279,6 +312,10 @@ def fetch_frontend_id(title_slug: str):
         "accept": "application/json",
         "referer": f"https://leetcode.com/problems/{title_slug}/"
     }
+    if SCRAPEDO_TOKEN:
+        import base64
+        auth = base64.b64encode(f"{SCRAPEDO_TOKEN}:".encode()).decode()
+        headers["Proxy-Authorization"] = f"Basic {auth}"
     opener = None
     if OXYLABS_CREDENTIALS:
         proxy_url = f"http://customer-{OXYLABS_CREDENTIALS}@pr.oxylabs.io:7777"
@@ -289,6 +326,19 @@ def fetch_frontend_id(title_slug: str):
             }
         )
         opener = urllib.request.build_opener(proxy)
+    elif SCRAPEDO_TOKEN:
+        proxy_url = f"http://{SCRAPEDO_TOKEN}:@proxy.scrape.do:8080"
+        proxy = urllib.request.ProxyHandler(
+            {
+                "http": proxy_url,
+                "https": proxy_url,
+            }
+        )
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        https_handler = urllib.request.HTTPSHandler(context=ctx)
+        opener = urllib.request.build_opener(proxy, https_handler)
         
     try:
         req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers, method="POST")
@@ -390,18 +440,159 @@ def save_local(submissions: List[SubmissionDTO]):
         csv.writer(file).writerows([submission.to_dict().values() for submission in submissions])
 
 
-def get_all_submissions(contest_slug: str, lookup_questions: List[QuestionDTO], mapping: dict) -> Tuple[Contest, List[SubmissionDTO]]:
+csv_write_lock = threading.Lock()
+
+def append_local_csv(submissions: List[SubmissionDTO]):
+    if not submissions:
+        return
+    file_exists = os.path.exists("submissions.csv")
+    with open("submissions.csv", "a", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        if not file_exists:
+            header = submissions[0].to_dict().keys()
+            writer.writerow(header)
+        for submission in submissions:
+            writer.writerow(submission.to_dict().values())
+
+
+def sync_local_submissions_to_db():
+    if not API_CLIENT:
+        return
+    if not os.path.exists("submissions.csv"):
+        return
+    logger.info("Found local submissions.csv. Syncing to DB...")
+    try:
+        submissions = []
+        with open("submissions.csv", "r", newline="", encoding="utf-8") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                try:
+                    sub_dict = {
+                        "id": int(row["id"]),
+                        "code": row["code"],
+                        "language": row["language"],
+                        "date": int(row["date"]),
+                        "userSlug": row["userSlug"],
+                        "page": int(row["page"]),
+                        "questionId": int(row["questionId"])
+                    }
+                    submissions.append(SubmissionDTO.from_dict(sub_dict))
+                except Exception as e:
+                    logger.error(f"Error parsing row in submissions.csv: {e}")
+        
+        if submissions:
+            logger.info(f"Syncing {len(submissions)} submissions to DB...")
+            resp = add_submissions.sync_detailed(client=API_CLIENT, body=submissions)
+            if resp.status_code == 200:
+                logger.info("Successfully synced local submissions to DB. Deleting local submissions.csv.")
+                os.remove("submissions.csv")
+            else:
+                logger.warning(f"Failed to sync submissions to DB, response code: {resp.status_code}")
+    except Exception as e:
+        logger.error(f"Failed to sync local submissions to DB: {e}")
+
+
+def run_plag_async(save_threads, questions):
+    logger.info("Plagiarism thread: Waiting for all page-saving threads to complete...")
+    for t in save_threads:
+        t.join()
+    logger.info("Plagiarism thread: All submissions are saved to the database. Running plagiarism checks...")
+    
+    if API_CLIENT:
+        api_base = os.getenv("API_BASE_URL") or "http://localhost:8080"
+        for question in questions:
+            qid = question.id
+            logger.info(f"Triggering plagiarism check for Q{qid} ...")
+            try:
+                url = f"{api_base}/api/v1/plagiarism/run/{qid}"
+                req = urllib.request.Request(url, method="POST", data=b"")
+                req.add_header("Content-Type", "application/json")
+                admin_token = os.getenv("ADMIN_SECRET_KEY")
+                if admin_token:
+                    req.add_header("X-Admin-Token", admin_token)
+                resp = urllib.request.urlopen(req, timeout=300)
+                body = json.loads(resp.read().decode())
+                logger.info(f"Successfully ran plagiarism check for Q{qid}: found {len(body)} matches")
+            except Exception as e:
+                logger.error(f"Failed to run plagiarism check for Q{qid}: {e}")
+
+
+
+def query_existing_submissions(question_id: int) -> List[int]:
+    if not API_CLIENT:
+        return []
+    url = f"{API_CLIENT._base_url}/contests/dummy/questions/{question_id}"
+    logger.info(f"Querying existing submissions from: {url}")
+    try:
+        req = urllib.request.Request(url, method="GET")
+        if hasattr(API_CLIENT, "_headers") and API_CLIENT._headers and "X-Admin-Token" in API_CLIENT._headers:
+            req.add_header("X-Admin-Token", API_CLIENT._headers["X-Admin-Token"])
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            if resp.status == 200:
+                subs = json.loads(resp.read().decode())
+                ids = []
+                for sub in subs:
+                    val = sub.get("submissionId") or sub.get("id")
+                    if val is not None:
+                        ids.append(int(val))
+                return ids
+    except Exception as e:
+        logger.error(f"Failed to query existing submissions for Q{question_id} from {url}: {e}")
+    return []
+
+
+def get_all_submissions(contest_slug: str, lookup_questions: List[QuestionDTO], mapping: dict) -> Tuple[Contest, List[SubmissionDTO], List[threading.Thread]]:
     logger.info(f"Fetching submissions for contest {contest_slug}")
+    
+    # Query existing submissions in the DB to avoid double fetching
+    existing_ids = set()
+    if API_CLIENT:
+        for q in lookup_questions:
+            try:
+                ids = query_existing_submissions(q.id)
+                existing_ids.update(ids)
+            except Exception as e:
+                logger.error(f"Failed to query existing submissions for Q{q.id}: {e}")
+    logger.info(f"Found {len(existing_ids)} existing submissions in DB.")
+
+    # Remove existing submissions.csv if we are not using the DB to start fresh
+    if not API_CLIENT and os.path.exists("submissions.csv"):
+        try:
+            os.remove("submissions.csv")
+            logger.info("Removed existing local submissions.csv")
+        except Exception as e:
+            logger.warning(f"Could not remove local submissions.csv: {e}")
+
     lookup_actual_ids = [question.id for question in lookup_questions]
     lookup_internal_ids = [int_id for int_id, act_id in mapping.items() if act_id in lookup_actual_ids]
     contest = None
     submissions: List[SubmissionDTO] = []
+    submissions_lock = threading.Lock()
+    save_threads = []
     i = 1
+    
     while True:
         response = get_submissions(contest_slug, i)
         if i > PAGE_LIMIT or not response["submissions"]:  # pages are over
             break
         logger.info(f"Processing page {i}")
+        
+        # Initialize contest/questions on first page rank retrieval
+        if not contest and response.get("total_rank"):
+            first_user = response["total_rank"][0]
+            contest = Contest(id=first_user["contest_id"], slug=contest_slug)
+            contest["participantCount"] = response.get("user_num", 0)
+            
+            if API_CLIENT:
+                logger.info("Creating contest in DB...")
+                try:
+                    add_contest.sync_detailed(client=API_CLIENT, contest=contest)
+                    logger.info("Creating questions in DB...")
+                    for question in lookup_questions:
+                        add_question.sync_detailed(client=API_CLIENT, body=question)
+                except Exception as e:
+                    logger.error(f"Failed to initialize contest/questions in DB: {e}")
+
         page_submissions = []
         count = 0
         for user_submissions, user in zip(response["submissions"], response["total_rank"]):
@@ -411,59 +602,109 @@ def get_all_submissions(contest_slug: str, lookup_questions: List[QuestionDTO], 
                 count += 1
                 if user_submissions[question_id]["data_region"] == "CN":
                     continue
-                if not contest:
-                    contest = Contest(id=user["contest_id"], slug=contest_slug)
-                    contest["participantCount"] = response.get("user_num", 0)
+                
+                # Check for duplicate using the contest-specific submission ID ('id')
+                sub_id = user_submissions[question_id].get("id")
+                if sub_id and int(sub_id) in existing_ids:
+                    continue
+                
                 user_submissions[question_id]["userSlug"] = user["user_slug"]
                 user_submissions[question_id]["page"] = i
                 user_submissions[question_id]["questionId"] = mapping[int(question_id)]
+                if "id" not in user_submissions[question_id] and "submission_id" in user_submissions[question_id]:
+                    user_submissions[question_id]["id"] = user_submissions[question_id]["submission_id"]
                 page_submissions.append(user_submissions[question_id])
+                
         # 0 submissions for the problems we are interested in (in practice, Q3 and Q4 -- hence, we can stop here)
         if count == 0:
             logger.info("No more submissions for the questions we are interested in, stopping")
             break
-        for submission in page_submissions:
+            
+        if not page_submissions:
+            logger.info(f"All submissions on page {i} already scraped. Skipping.")
+            i += 1
+            continue
+
+        # Concurrent fetching using ThreadPoolExecutor
+        page_dtos = []
+        
+        def fetch_one(submission):
             try:
-                time.sleep(0.5)
+                if not OXYLABS_CREDENTIALS and not SCRAPEDO_TOKEN:
+                    time.sleep(0.5)  # respect rate limits if no proxies are active
                 code = get_submission_with_code(submission["submission_id"], contest_slug, i)
                 if code:
                     submission["language"] = code["lang"]
                     submission["code"] = code["code"]
-                    submission["page"] = i
-                    submissions.append(SubmissionDTO.from_dict(submission))
+                    return SubmissionDTO.from_dict(submission)
             except Exception as e:
                 logger.error(f"Failed to fetch submission {submission['submission_id']}: {e}")
-        logger.info(f"Fetched {len(page_submissions)} submissions from page {i}")
+            return None
+
+        # Fetch codes concurrently
+        max_workers = int(os.getenv("CONCURRENT_WORKERS") or (15 if OXYLABS_CREDENTIALS else (5 if SCRAPEDO_TOKEN else 3)))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [executor.submit(fetch_one, sub) for sub in page_submissions]
+            for future in concurrent.futures.as_completed(futures):
+                dto = future.result()
+                if dto:
+                    page_dtos.append(dto)
+
+        # Thread to save this page's submissions
+        if page_dtos:
+            with submissions_lock:
+                submissions.extend(page_dtos)
+                
+            def save_job(dtos_to_save, page_num):
+                saved_to_db = False
+                if API_CLIENT:
+                    logger.info(f"[Thread] Saving {len(dtos_to_save)} submissions from page {page_num} to DB...")
+                    try:
+                        resp = add_submissions.sync_detailed(client=API_CLIENT, body=dtos_to_save)
+                        if resp.status_code == 200:
+                            logger.info(f"[Thread] Successfully saved page {page_num} submissions to DB.")
+                            saved_to_db = True
+                        else:
+                            logger.warning(f"[Thread] Failed to save page {page_num} submissions to DB (status {resp.status_code}). Falling back to local CSV.")
+                    except Exception as e:
+                        logger.error(f"[Thread] Failed to save page {page_num} submissions to DB: {e}. Falling back to local CSV.")
+                
+                if not saved_to_db:
+                    logger.info(f"[Thread] Saving {len(dtos_to_save)} submissions from page {page_num} locally...")
+                    with csv_write_lock:
+                        append_local_csv(dtos_to_save)
+
+            save_thread = threading.Thread(target=save_job, args=(page_dtos.copy(), i), daemon=False)
+            save_thread.start()
+            save_threads.append(save_thread)
+
+        logger.info(f"Fetched and queued saving for {len(page_dtos)} submissions from page {i}")
         i += 1
-    assert contest
-    return (contest, submissions)
+        
+    return (contest, submissions, save_threads)
 
-
-def save_async(contest, questions, submissions):
-    try:
-        save_api(contest, questions, submissions)
-    except Exception as e:
-        logger.error(f"Failed to save contest data asynchronously: {e}")
 
 global_save_threads = []
 
 def process_contest(contest_slug: str) -> List[str]:
     logger.info(f"Processing contest {contest_slug}")
     questions, mapping = get_questions(contest_slug)
-    contest, submissions = get_all_submissions(contest_slug, questions, mapping)
+    contest, submissions, save_threads = get_all_submissions(contest_slug, questions, mapping)
+    
     if API_CLIENT:
-        logger.info(f"Saving {len(submissions)} submissions asynchronously for {contest_slug}")
-        import threading
-        thread = threading.Thread(
-            target=save_async,
-            args=(contest, questions, submissions),
+        logger.info(f"Spawning plagiarism thread for {contest_slug}")
+        plag_thread = threading.Thread(
+            target=run_plag_async,
+            args=(save_threads, questions),
             daemon=False
         )
-        thread.start()
-        global_save_threads.append(thread)
+        plag_thread.start()
+        global_save_threads.append(plag_thread)
     else:
-        logger.info(f"Saving {len(submissions)} submissions locally")
-        save_local(submissions)
+        for t in save_threads:
+            t.join()
+        logger.info(f"Successfully processed contest {contest_slug} locally.")
+        
     return [question.name for question in questions]
 
 
@@ -485,6 +726,9 @@ def handler(event, context):
     contest_slug = os.environ["CONTEST_SLUG"]
     if os.environ.get("TASK_TOKEN"):
         setup_heartbeat()
+
+    if API_CLIENT:
+        sync_local_submissions_to_db()
 
     if ".." in contest_slug:
         import re

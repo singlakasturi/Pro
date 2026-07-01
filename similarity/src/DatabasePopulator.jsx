@@ -19,8 +19,8 @@ export default function DatabasePopulator({ user, onSignOut }) {
     }
   };
 
-  // Hardcoded Admin Email check
-  const isAdmin = user && user.email === "kasturisingla2@gmail.com";
+  // Admin Email check from Vite environment variable
+  const isAdmin = user && user.email === import.meta.env.VITE_ADMIN_EMAIL;
 
   const handleTriggerScraper = async (e) => {
     e.preventDefault();

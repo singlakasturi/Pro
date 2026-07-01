@@ -228,7 +228,7 @@ function Home({ user, onSignOut }) {
               <button onClick={() => scrollToSection("contact")} className="text-white hover:text-gray-300 transition-colors cursor-pointer">Contact Us</button>
             </div>
             <div className="flex items-center space-x-4">
-              {user && user.email === "kasturisingla2@gmail.com" && (
+              {user && user.email === import.meta.env.VITE_ADMIN_EMAIL && (
                 <Link
                   to="/admin/populator"
                   className="text-xs text-[#abd9ff] hover:text-[#8ec7f5] transition-colors cursor-pointer font-semibold mr-2 bg-[#abd9ff]/10 py-1 px-3.5 rounded-full border border-[#abd9ff]/20 hover:border-[#abd9ff]/45"

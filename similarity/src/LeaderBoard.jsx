@@ -103,7 +103,7 @@ export default function Leaderboard({ user, onSignOut }) {
           <Link to="/" className="text-sm text-zinc-400 hover:text-white transition-colors">Why Us</Link>
           <Link to="/" className="text-sm text-zinc-400 hover:text-white transition-colors">Mission</Link>
           <Link to="/" className="text-sm text-zinc-400 hover:text-white transition-colors">FAQ</Link>
-          {user && user.email === "kasturisingla2@gmail.com" && (
+          {user && user.email === import.meta.env.VITE_ADMIN_EMAIL && (
             <Link
               to="/admin/populator"
               className="text-xs text-[#abd9ff] hover:text-[#8ec7f5] transition-colors cursor-pointer font-semibold bg-[#abd9ff]/10 py-1.5 px-3.5 rounded-full border border-[#abd9ff]/20 hover:border-[#abd9ff]/45"
