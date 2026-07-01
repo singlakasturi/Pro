@@ -47,11 +47,6 @@ public class DatabasePopulationController {
     @PersistenceContext
     private EntityManager entityManager;
 
-    @GetMapping("/test")
-    public String test() {
-        return "this is a test string.";
-    }
-
     @PostMapping("/admin/scrape")
     public ResponseEntity<String> triggerScrape(
             @RequestParam("start") int start,
