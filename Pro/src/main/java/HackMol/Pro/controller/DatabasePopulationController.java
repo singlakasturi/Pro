@@ -52,6 +52,12 @@ public class DatabasePopulationController {
             @RequestParam("start") int start,
             @RequestParam("end") int end,
             @RequestParam(value = "type", defaultValue = "weekly") String type) {
+        if (start < 1 || end < 1 || start > 10000 || end > 10000) {
+            return ResponseEntity.badRequest().body("Invalid contest range. Numbers must be between 1 and 10000.");
+        }
+        if (!"weekly".equalsIgnoreCase(type) && !"biweekly".equalsIgnoreCase(type)) {
+            return ResponseEntity.badRequest().body("Invalid type. Must be 'weekly' or 'biweekly'.");
+        }
         if (start > end) {
             return ResponseEntity.badRequest().body("Start contest must be less than or equal to end contest.");
         }

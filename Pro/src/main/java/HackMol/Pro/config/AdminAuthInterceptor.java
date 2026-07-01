@@ -23,7 +23,16 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
     private String adminEmail;
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+
+    public AdminAuthInterceptor() {
+        this.objectMapper = new ObjectMapper();
+        com.fasterxml.jackson.core.StreamReadConstraints constraints = com.fasterxml.jackson.core.StreamReadConstraints.builder()
+                .maxNestingDepth(20)
+                .maxStringLength(1024 * 1024)
+                .build();
+        this.objectMapper.getFactory().setStreamReadConstraints(constraints);
+    }
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -45,6 +54,13 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
         if (token == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Unauthorized: Missing auth token");
+            return false;
+        }
+
+        // Sanitize and validate token format to prevent malicious URL construction/parameter injection
+        if (token.length() > 2048 || !token.matches("^[a-zA-Z0-9_\\.\\-\\+\\/\\=]+$")) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("Bad Request: Invalid token format");
             return false;
         }
 

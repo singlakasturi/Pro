@@ -2,6 +2,7 @@ import csv
 import json
 import logging
 import os
+import subprocess
 import sys
 import tempfile
 from threading import Event, Thread
@@ -51,7 +52,7 @@ def process_questions(contest_slug, question_names):
     cwd = os.getcwd()
     with tempfile.TemporaryDirectory() as tmpdir:
         os.chdir(tmpdir)
-        os.system(f"git clone {REPO} --depth=1")
+        subprocess.run(["git", "clone", REPO, "--depth=1"], check=True)
         for dirpath, _, _ in os.walk("./leetcode/solution"):
             if dirpath.count("/") != 4:
                 continue

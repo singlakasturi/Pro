@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 export default function DatabasePopulator({ user, onSignOut }) {
   const [startContest, setStartContest] = useState(420);
@@ -118,6 +119,16 @@ export default function DatabasePopulator({ user, onSignOut }) {
       </nav>
 
       <div className="max-w-4xl mx-auto px-6 py-16 flex flex-col items-center">
+        <div className="w-full flex items-center justify-between mb-8">
+          <Link
+            to="/"
+            className="flex items-center gap-2 text-zinc-400 hover:text-[#abd9ff] transition-all cursor-pointer text-sm font-medium"
+          >
+            <ArrowLeft size={16} />
+            <span>Back to Home</span>
+          </Link>
+        </div>
+
         <div className="w-full text-center mb-12">
           <h1 className="text-4xl font-extrabold mb-3 bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
             Database Populator
