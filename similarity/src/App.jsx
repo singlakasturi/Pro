@@ -214,8 +214,8 @@ function Home({ user, onSignOut }) {
   };
 
   return (
-    <>
-      <section id="main" className="Main">
+    <div className="Main w-full min-h-screen">
+      <section id="main">
         <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center cursor-pointer">
           <div className="bg-black/60 rounded-lg py-2.5 px-8 max-w-6xl w-full mx-auto flex justify-between items-center shadow-lg backdrop-blur-sm">
             <Link to="/" className="text-[#abd9ff] text-2xl font-bold flex items-center gap-2">
@@ -555,7 +555,7 @@ function Home({ user, onSignOut }) {
             </div>
           </div>
       </section>
-    </>
+    </div>
   );
 }
 
