@@ -35,5 +35,5 @@ RUN /app/data/.venv/bin/playwright install-deps
 # Expose Spring Boot's port
 EXPOSE 8080
 
-# Command to start the application
-CMD ["java", "-jar", "app.jar"]
+# Command to start the application with limited heap size to save RAM for the scraper
+CMD ["java", "-Xmx160m", "-jar", "app.jar"]
