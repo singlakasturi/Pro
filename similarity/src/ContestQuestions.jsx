@@ -28,8 +28,9 @@ export default function ContestQuestions() {
             totalPoints,
             questionCount: json.length,
           });
+          const sortedJson = [...json].sort((a, b) => Number(a.questionNumber) - Number(b.questionNumber));
           setQuestions(
-            json.map((q) => ({
+            sortedJson.map((q) => ({
               questionNumber: Number(q.questionNumber),
               questionId: q.questionId,
               title: q.title,
