@@ -50,7 +50,7 @@ graph TD
     A[React/Vite Frontend] <-->|REST API / CORS| B[Spring Boot Java 21 Backend]
     B -->|JPA / Hibernate| C[(PostgreSQL Database)]
     B -->|Threaded Subprocess Trigger| D[Python Scraper Engine]
-    D -->|Playwright / BS4 / Proxies| E[LeetCode Web Scrape]
+    D -->|Playwright / Proxies| E[LeetCode Web Scrape]
     D -->|Save Submissions| C
     D -->|Run copydetect + Union-Find| F[Plagiarism Processing Engine]
     F -->|REST API / Sync DTOs| B
