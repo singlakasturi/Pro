@@ -8,6 +8,8 @@ export default function DatabasePopulator({ user, onSignOut }) {
   const [status, setStatus] = useState({ type: null, message: "" });
   const [loading, setLoading] = useState(false);
   const [contestType, setContestType] = useState("weekly");
+  const [activeTab, setActiveTab] = useState("populator"); // "populator" or "plagiarism"
+  const [missingContestInfo, setMissingContestInfo] = useState(null);
 
   const handleTypeChange = (type) => {
     setContestType(type);
@@ -25,6 +27,7 @@ export default function DatabasePopulator({ user, onSignOut }) {
 
   const handleTriggerScraper = async (e) => {
     e.preventDefault();
+    setMissingContestInfo(null);
     if (!isAdmin) {
       setStatus({ type: "error", message: "Forbidden: You are not authorized as admin." });
       return;
@@ -56,6 +59,99 @@ export default function DatabasePopulator({ user, onSignOut }) {
         type: "success",
         message: `${msg}. The python scraper is now processing ${contestType} contests ${startContest} to ${endContest} in the background. Check backend console outputs for details!`,
       });
+    } catch (err) {
+      setStatus({ type: "error", message: err.message || "An unexpected error occurred." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTriggerPlagiarism = async (e) => {
+    e.preventDefault();
+    if (!isAdmin) {
+      setStatus({ type: "error", message: "Forbidden: You are not authorized as admin." });
+      return;
+    }
+    if (startContest > endContest) {
+      setStatus({ type: "error", message: "Start contest number cannot be greater than end contest number." });
+      return;
+    }
+
+    setLoading(true);
+    setMissingContestInfo(null);
+    setStatus({ type: "info", message: "Triggering plagiarism checker job on the backend..." });
+
+    try {
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+      const res = await fetch(`${baseUrl}/api/v1/plagiarism/run/range?start=${startContest}&end=${endContest}&type=${contestType}`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${user.token}`,
+        },
+      });
+
+      let data = null;
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await res.json();
+      }
+
+      if (!res.ok) {
+        if (data && data.status === "missing_contests") {
+          setMissingContestInfo({
+            contests: data.missing,
+            start: startContest,
+            end: endContest,
+            type: contestType
+          });
+          setStatus({
+            type: "warning",
+            message: `Plagiarism check blocked: some contests in the requested range are not present in the database.`
+          });
+        } else {
+          const errMsg = data ? data.error || data.message : await res.text();
+          throw new Error(errMsg || "Failed to trigger plagiarism checker");
+        }
+        return;
+      }
+
+      const msg = data ? data.message : await res.text();
+      setStatus({
+        type: "success",
+        message: `${msg}. The plagiarism service is now checking ${contestType} contests ${startContest} to ${endContest} in the background. Check backend console outputs for details!`,
+      });
+    } catch (err) {
+      setStatus({ type: "error", message: err.message || "An unexpected error occurred." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleScrapeAndRunPlag = async () => {
+    if (!missingContestInfo) return;
+    setLoading(true);
+    setStatus({ type: "info", message: "Triggering scraper for the missing contests..." });
+
+    try {
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+      const res = await fetch(`${baseUrl}/api/v1/admin/scrape?start=${missingContestInfo.start}&end=${missingContestInfo.end}&type=${missingContestInfo.type}`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${user.token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Failed to trigger scraper");
+      }
+
+      const msg = await res.text();
+      setStatus({
+        type: "success",
+        message: `${msg}. The python scraper is now processing ${missingContestInfo.type} contests ${missingContestInfo.start} to ${missingContestInfo.end} in the background. It will automatically run the plagiarism checks once completed!`,
+      });
+      setMissingContestInfo(null);
     } catch (err) {
       setStatus({ type: "error", message: err.message || "An unexpected error occurred." });
     } finally {
@@ -131,17 +227,50 @@ export default function DatabasePopulator({ user, onSignOut }) {
 
         <div className="w-full text-center mb-12">
           <h1 className="text-4xl font-extrabold mb-3 bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-            Database Populator
+            {activeTab === "populator" ? "Database Populator" : "Plagiarism Checker"}
           </h1>
           <p className="text-zinc-400 max-w-xl mx-auto text-sm">
-            Trigger automated LeetCode weekly or biweekly contest scrapes to pull contest details, questions, submissions, and code. Results will automatically run similarity tests and populate the platform.
+            {activeTab === "populator"
+              ? "Trigger automated LeetCode weekly or biweekly contest scrapes to pull contest details, questions, submissions, and code. Results will automatically run similarity tests and populate the platform."
+              : "Run the plagiarism check service on already populated contests. It will execute the similarity detection algorithm on all submissions of the selected contest range."}
           </p>
         </div>
 
         <div className="relative w-full max-w-lg bg-zinc-950 border border-zinc-800/80 rounded-2xl p-8 shadow-2xl">
           <div className="absolute -inset-0.5 bg-gradient-to-r from-[#abd9ff]/30 to-blue-600/30 rounded-2xl opacity-10 blur-xl -z-10"></div>
           
-          <form onSubmit={handleTriggerScraper} className="space-y-6">
+          <div className="flex border-b border-zinc-900 mb-6 pb-2 space-x-4">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab("populator");
+                setStatus({ type: null, message: "" });
+              }}
+              className={`pb-2 text-sm font-semibold border-b-2 transition-all ${
+                activeTab === "populator"
+                  ? "border-[#abd9ff] text-[#abd9ff]"
+                  : "border-transparent text-zinc-400 hover:text-white"
+              }`}
+            >
+              Scrape & Populate
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab("plagiarism");
+                setStatus({ type: null, message: "" });
+              }}
+              className={`pb-2 text-sm font-semibold border-b-2 transition-all ${
+                activeTab === "plagiarism"
+                  ? "border-[#abd9ff] text-[#abd9ff]"
+                  : "border-transparent text-zinc-400 hover:text-white"
+              }`}
+            >
+              Run Plagiarism Check
+            </button>
+          </div>
+
+          <form onSubmit={activeTab === "populator" ? handleTriggerScraper : handleTriggerPlagiarism} className="space-y-6">
             <div>
               <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2.5">
                 Contest Type
@@ -210,6 +339,8 @@ export default function DatabasePopulator({ user, onSignOut }) {
                   ? "bg-emerald-950/20 text-emerald-400 border-emerald-500/20" 
                   : status.type === "error" 
                   ? "bg-rose-950/20 text-rose-400 border-rose-500/20" 
+                  : status.type === "warning" 
+                  ? "bg-amber-950/20 text-amber-400 border-amber-500/20" 
                   : "bg-zinc-900/50 text-zinc-300 border-zinc-800"
               }`}>
                 <div className="mt-0.5 shrink-0">
@@ -224,6 +355,12 @@ export default function DatabasePopulator({ user, onSignOut }) {
                       <line x1="12" x2="12" y1="8" y2="12" />
                       <line x1="12" x2="12.01" y1="16" y2="16" />
                     </svg>
+                  ) : status.type === "warning" ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                      <line x1="12" y1="9" x2="12" y2="13" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
                   ) : (
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" />
@@ -233,6 +370,44 @@ export default function DatabasePopulator({ user, onSignOut }) {
                   )}
                 </div>
                 <p className="leading-relaxed">{status.message}</p>
+              </div>
+            )}
+
+            {missingContestInfo && (
+              <div className="p-4 rounded-xl text-sm border bg-amber-950/20 border-amber-500/20 text-amber-400 flex flex-col gap-3">
+                <div>
+                  <span className="font-bold block mb-1">Scrape Recommendation</span>
+                  <span className="text-zinc-400 text-xs leading-relaxed">
+                    The following contests are not in the database:{" "}
+                    <span className="font-mono text-amber-300 font-semibold">{missingContestInfo.contests.join(", ")}</span>.
+                    Would you like to scrape them now?
+                  </span>
+                  <span className="block text-[11px] text-zinc-500 mt-1 italic leading-normal">
+                    Note: Scraping will populate the database and run the plagiarism checks for them automatically upon completion.
+                  </span>
+                </div>
+                <div className="flex gap-2 justify-end pt-1.5 border-t border-amber-500/10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMissingContestInfo(null);
+                      setStatus({ type: null, message: "" });
+                    }}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-zinc-300 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleScrapeAndRunPlag}
+                    className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#abd9ff] hover:bg-[#8ec7f5] text-black transition-colors flex items-center gap-1 cursor-pointer"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                    </svg>
+                    Scrape & Run Plag
+                  </button>
+                </div>
               </div>
             )}
 
@@ -251,7 +426,7 @@ export default function DatabasePopulator({ user, onSignOut }) {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Initializing Scraper Process...
+                  {activeTab === "populator" ? "Initializing Scraper Process..." : "Initializing Plagiarism Check..."}
                 </>
               ) : (
                 <>
@@ -260,7 +435,7 @@ export default function DatabasePopulator({ user, onSignOut }) {
                     <polyline points="3.29 7 12 12 20.71 7" />
                     <line x1="12" x2="12" y1="22" y2="12" />
                   </svg>
-                  Run Scraper Job
+                  {activeTab === "populator" ? "Run Scraper Job" : "Run Plagiarism Check"}
                 </>
               )}
             </button>
@@ -268,8 +443,18 @@ export default function DatabasePopulator({ user, onSignOut }) {
         </div>
 
         <div className="w-full max-w-lg mt-8 bg-zinc-950/30 border border-zinc-900 rounded-xl p-5 text-xs text-zinc-500 leading-relaxed">
-          <p className="font-semibold text-zinc-400 mb-1.5">Note on Scraper Execution:</p>
-          Scraper processes are resource-intensive and will run asynchronously in a background thread on the server. You can check the server logs directly to monitor progress. Once completed, the new contest questions and results will immediately populate in the <Link to="/contests" className="text-[#abd9ff] hover:underline">Contests</Link> tab.
+          <p className="font-semibold text-zinc-400 mb-1.5">
+            {activeTab === "populator" ? "Note on Scraper Execution:" : "Note on Plagiarism Execution:"}
+          </p>
+          {activeTab === "populator" ? (
+            <>
+              Scraper processes are resource-intensive and will run asynchronously in a background thread on the server. You can check the server logs directly to monitor progress. Once completed, the new contest questions and results will immediately populate in the <Link to="/contests" className="text-[#abd9ff] hover:underline">Contests</Link> tab.
+            </>
+          ) : (
+            <>
+              Plagiarism detection comparisons are resource-intensive and will run asynchronously in a background thread on the server. Check backend console logs to monitor progress. Once completed, the similarity matching data will be updated for the specified contests.
+            </>
+          )}
         </div>
       </div>
     </div>

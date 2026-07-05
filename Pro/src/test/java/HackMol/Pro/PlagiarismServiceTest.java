@@ -187,4 +187,88 @@ class PlagiarismServiceTest {
         assertEquals("cpp", plagiarismService.getSubmissionLanguage("sub-3"));
         assertEquals("python3", plagiarismService.getSubmissionLanguage("sub-4"));
     }
+
+    @Test
+    void testPlagiarismCheckForRange() {
+        // 1. Create a dummy contest matching weekly-contest-900
+        Contest contest = new Contest();
+        contest.setContestId("weekly-contest-900");
+        contest.setTitle("LeetCode Weekly Contest 900");
+        contest.setStartDate(LocalDateTime.now());
+        contest.setParticipantCount(5);
+        contestRepository.save(contest);
+
+        // 2. Create a dummy question
+        Question question = new Question();
+        question.setQuestionId(9001);
+        question.setContest(contest);
+        question.setQuestionNumber(1);
+        question.setTitle("Test Question 9001");
+        question.setPoint(5);
+        question.setDifficulty(Difficulty.EASY);
+        question.setTotalSubmissions(0);
+        question.setTotalAccepted(0);
+        question.setUsersAccepted(0);
+        questionRepository.save(question);
+
+        // 3. Create two submissions
+        Submission sub1 = new Submission("sub-9001-1", "user-1", 9001, "python3", LocalDateTime.now());
+        Submission sub2 = new Submission("sub-9001-2", "user-2", 9001, "python3", LocalDateTime.now());
+        submissionRepository.save(sub1);
+        submissionRepository.save(sub2);
+
+        String code1 = "# Bubble sort implementation\n" +
+                       "arr = [64, 34, 25, 12, 22, 11, 90]\n" +
+                       "n = len(arr)\n" +
+                       "for i in range(n - 1):\n" +
+                       "    for j in range(n - i - 1):\n" +
+                       "        if arr[j] > arr[j + 1]:\n" +
+                       "            temp = arr[j]\n" +
+                       "            arr[j] = arr[j + 1]\n" +
+                       "            arr[j + 1] = temp\n";
+        String code2 = "# Bubble sort implementation\n" +
+                       "arr = [64, 34, 25, 12, 22, 11, 90]\n" +
+                       "n = len(arr)\n" +
+                       "for i in range(n - 1):\n" +
+                       "    for j in range(n - i - 1):\n" +
+                       "        if arr[j] > arr[j + 1]:\n" +
+                       "            temp = arr[j]\n" +
+                       "            arr[j] = arr[j + 1]\n" +
+                       "            arr[j + 1] = temp\n";
+        codeRepository.save(new Code("sub-9001-1", code1));
+        codeRepository.save(new Code("sub-9001-2", code2));
+
+        // 4. Run the plagiarism check range
+        plagiarismService.runPlagiarismCheckForRange(900, 900, "weekly");
+
+        // 5. Assertions
+        List<PlagiarismMatch> matches = plagiarismService.getMatchesForSubmission("sub-9001-1");
+        assertNotNull(matches);
+        assertFalse(matches.isEmpty());
+        PlagiarismMatch match = matches.get(0);
+        assertEquals("weekly-contest-900", match.getContestId());
+        assertEquals(9001, match.getQuestionId());
+        assertTrue(match.getSimilarity() > 80.0);
+    }
+
+    @Test
+    void testGetMissingContests() {
+        // 1. Create one contest that exists
+        Contest contest = new Contest();
+        contest.setContestId("weekly-contest-700");
+        contest.setTitle("LeetCode Weekly Contest 700");
+        contest.setStartDate(LocalDateTime.now());
+        contest.setParticipantCount(5);
+        contestRepository.save(contest);
+
+        // 2. Query range 699 to 701
+        List<String> missing = plagiarismService.getMissingContests(699, 701, "weekly");
+
+        // 3. Assertions: 699 and 701 should be missing, 700 is present
+        assertNotNull(missing);
+        assertEquals(2, missing.size());
+        assertTrue(missing.contains("weekly-contest-699"));
+        assertTrue(missing.contains("weekly-contest-701"));
+        assertFalse(missing.contains("weekly-contest-700"));
+    }
 }

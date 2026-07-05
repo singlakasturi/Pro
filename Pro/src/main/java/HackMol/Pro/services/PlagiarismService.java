@@ -5,6 +5,7 @@ import HackMol.Pro.model.PlagiarismMatch;
 import HackMol.Pro.model.Question;
 import HackMol.Pro.model.Submission;
 import HackMol.Pro.repository.CodeRepository;
+import HackMol.Pro.repository.ContestRepository;
 import HackMol.Pro.repository.PlagiarismMatchRepository;
 import HackMol.Pro.repository.QuestionRepository;
 import HackMol.Pro.repository.SubmissionRepository;
@@ -32,18 +33,21 @@ public class PlagiarismService {
     private final PlagiarismMatchRepository plagiarismMatchRepository;
     private final QuestionRepository questionRepository;
     private final JdbcTemplate jdbcTemplate;
+    private final ContestRepository contestRepository;
 
     @Autowired
     public PlagiarismService(SubmissionRepository submissionRepository,
                              CodeRepository codeRepository,
                              PlagiarismMatchRepository plagiarismMatchRepository,
                              QuestionRepository questionRepository,
-                             JdbcTemplate jdbcTemplate) {
+                             JdbcTemplate jdbcTemplate,
+                             ContestRepository contestRepository) {
         this.submissionRepository = submissionRepository;
         this.codeRepository = codeRepository;
         this.plagiarismMatchRepository = plagiarismMatchRepository;
         this.questionRepository = questionRepository;
         this.jdbcTemplate = jdbcTemplate;
+        this.contestRepository = contestRepository;
     }
 
     @Transactional
@@ -170,6 +174,33 @@ public class PlagiarismService {
         }
 
         return matchesSaved;
+    }
+
+    public void runPlagiarismCheckForRange(int start, int end, String type) {
+        String prefix = "biweekly".equalsIgnoreCase(type) ? "biweekly-contest-" : "weekly-contest-";
+        for (int i = start; i <= end; i++) {
+            String contestId = prefix + i;
+            List<Question> questions = questionRepository.findByContestContestId(contestId);
+            for (Question question : questions) {
+                try {
+                    runPlagiarismCheck(question.getQuestionId());
+                } catch (Exception e) {
+                    System.err.println("Error running plagiarism check for question ID " + question.getQuestionId() + ": " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    public List<String> getMissingContests(int start, int end, String type) {
+        List<String> missing = new ArrayList<>();
+        String prefix = "biweekly".equalsIgnoreCase(type) ? "biweekly-contest-" : "weekly-contest-";
+        for (int i = start; i <= end; i++) {
+            String contestId = prefix + i;
+            if (!contestRepository.existsById(contestId)) {
+                missing.add(contestId);
+            }
+        }
+        return missing;
     }
 
     public List<PlagiarismMatch> getMatchesForSubmission(String submissionId) {
