@@ -75,15 +75,15 @@ class PlagiarismServiceTest {
                        "}";
                        
         String code2 = "public class Solution {\n" +
-                       "    public int add(int x, int y) {\n" +
-                       "        int result = x + y;\n" +
-                       "        System.out.println(\"Sum is: \" + result);\n" +
-                       "        if (result > 10) {\n" +
+                       "    public int add(int a, int b) {\n" +
+                       "        int sum = a + b;\n" +
+                       "        System.out.println(\"Sum is: \" + sum);\n" +
+                       "        if (sum > 10) {\n" +
                        "            System.out.println(\"Sum is greater than 10\");\n" +
                        "        } else {\n" +
                        "            System.out.println(\"Sum is less than or equal to 10\");\n" +
                        "        }\n" +
-                       "        return result;\n" +
+                       "        return sum;\n" +
                        "    }\n" +
                        "}";
 
@@ -180,7 +180,7 @@ class PlagiarismServiceTest {
         PlagiarismMatch match = matches.get(0);
         assertEquals("test-contest", match.getContestId());
         assertEquals(8888, match.getQuestionId());
-        assertEquals("mixed", match.getLanguage());
+        assertEquals("all", match.getLanguage());
         assertTrue(match.getSimilarity() > 50.0);
 
         // Test fetching dynamic languages

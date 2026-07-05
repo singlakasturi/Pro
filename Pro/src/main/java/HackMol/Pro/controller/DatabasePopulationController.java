@@ -47,6 +47,9 @@ public class DatabasePopulationController {
     @PersistenceContext
     private EntityManager entityManager;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
     @PostMapping("/admin/scrape")
     public ResponseEntity<String> triggerScrape(
             @RequestParam("start") int start,
@@ -218,36 +221,58 @@ public class DatabasePopulationController {
     @PostMapping("/submissions/bulk")
     @Transactional
     public ResponseEntity<Void> populateSubmissions(@RequestBody List<SubmissionPopulateDTO> dtos) {
-        for (SubmissionPopulateDTO dto : dtos) {
-            Submission submission = entityManager.find(Submission.class, dto.getId());
-            if (submission == null) {
-                submission = new Submission();
-                submission.setSubmissionId(dto.getId());
-                submission.setUsername(dto.getUserSlug());
-                submission.setQuestionId(dto.getQuestionId());
-                submission.setLanguage(dto.getLanguage());
+        if (dtos.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+
+        // 1. Batch upsert into submission table
+        String submissionSql = "INSERT INTO submission (submission_id, username, question_id, language, submission_date) " +
+                "VALUES (?, ?, ?, ?, ?) " +
+                "ON CONFLICT (submission_id) " +
+                "DO UPDATE SET username = EXCLUDED.username, question_id = EXCLUDED.question_id, " +
+                "language = EXCLUDED.language, submission_date = EXCLUDED.submission_date";
+
+        jdbcTemplate.batchUpdate(submissionSql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                SubmissionPopulateDTO dto = dtos.get(i);
+                ps.setString(1, dto.getId());
+                ps.setString(2, dto.getUserSlug());
+                ps.setInt(3, dto.getQuestionId());
+                ps.setString(4, dto.getLanguage());
                 
                 LocalDateTime submissionDate = LocalDateTime.ofInstant(
                         Instant.ofEpochSecond(dto.getDate()), ZoneId.systemDefault()
                 );
-                submission.setSubmissionDate(submissionDate);
-                entityManager.persist(submission);
-            } else {
-                submission.setUsername(dto.getUserSlug());
-                submission.setQuestionId(dto.getQuestionId());
-                submission.setLanguage(dto.getLanguage());
-                entityManager.merge(submission);
+                ps.setTimestamp(5, java.sql.Timestamp.valueOf(submissionDate));
             }
 
-            Code code = entityManager.find(Code.class, dto.getId());
-            if (code == null) {
-                code = new Code(dto.getId(), dto.getCode());
-                entityManager.persist(code);
-            } else {
-                code.setSubmittedCode(dto.getCode());
-                entityManager.merge(code);
+            @Override
+            public int getBatchSize() {
+                return dtos.size();
             }
-        }
+        });
+
+        // 2. Batch upsert into code table
+        String codeSql = "INSERT INTO code (submission_id, submitted_code) " +
+                "VALUES (?, ?) " +
+                "ON CONFLICT (submission_id) " +
+                "DO UPDATE SET submitted_code = EXCLUDED.submitted_code";
+
+        jdbcTemplate.batchUpdate(codeSql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                SubmissionPopulateDTO dto = dtos.get(i);
+                ps.setString(1, dto.getId());
+                ps.setString(2, dto.getCode());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return dtos.size();
+            }
+        });
+
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

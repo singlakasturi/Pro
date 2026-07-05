@@ -48,9 +48,7 @@ public class ContestService {
 
     public List<String> getExternalContestIds() {
         try {
-            return contestRepository.findAll().stream()
-                    .map(Contest::getContestId)
-                    .collect(Collectors.toList());
+            return contestRepository.findAllContestIds();
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();
